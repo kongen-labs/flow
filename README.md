@@ -7,6 +7,17 @@ Google, Mistral, and DeepSeek, and chat with all of them from one place.
 Your conversations live in your browser only — exportable as JSON, with no
 server copy.
 
+## Routing without a second LLM
+
+Every Auto prompt is scored by Kongen's Logic engine and routed to the model
+best suited to it. The scoring is pattern-based analysis, not another LLM
+call — your prompt is never handed to a second model to decide where it
+should go. And with Smart Reference, only the relevant part of your
+conversation is referenced on each reply — fewer tokens sent to your
+provider, and the savings follow.
+
+**Get a free Kongen key → [kongenlabs.life](https://kongenlabs.life)**
+
 ## How it works
 
 - **Auto mode** sends your prompt's text to Kongen's scoring API; the score
@@ -17,8 +28,8 @@ server copy.
   your configured providers.
 - **Answers stream provider → browser.** Kongen records the routing decision
   it made (regime, confidence, chosen model), not your prompt's text.
-- **No account is needed for your conversations**, and the app ships no
-  analytics or tracking SDK.
+- **No password, no profile** — your conversations are never attached to an
+  account, and the app ships no analytics or tracking SDK.
 
 Use it hosted at **[flow.kongenlabs.life](https://flow.kongenlabs.life)**.
 Get a free Kongen key at **[kongenlabs.life](https://kongenlabs.life)**.
