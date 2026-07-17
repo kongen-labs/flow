@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable variant: full-bleed paper background, glyph shrunk into the
+       central 80% safe zone so any platform mask (circle, squircle) keeps
+       the mark intact. Same Kongen tokens as icon.svg. -->
+  <rect width="512" height="512" fill="#f4efe8"/>
+  <g transform="translate(256 256) scale(0.68) translate(-256 -256)"
+     fill="none" stroke-linecap="round" stroke-width="44">
+    <path d="M108 172 C 196 118, 288 226, 404 168" stroke="#a3262c"/>
+    <path d="M108 264 C 196 210, 288 318, 404 260" stroke="#1a1410"/>
+    <path d="M108 356 C 196 302, 288 410, 404 352" stroke="#a3262c" opacity="0.45"/>
+  </g>
+</svg>
