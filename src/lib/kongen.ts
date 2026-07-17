@@ -2,20 +2,23 @@
  * Kongen public API client — routing is the hero feature, gracefully
  * key-gated.
  *
- * POST /v1/logic/score (public, auth'd with X-API-Key, 1 KT per score).
- * Returns the detected reasoning regime, which the app maps to the
- * best-suited model via lib/models.ts.
+ * POST /v1/logic/score (public, auth'd with X-API-Key, 1 KT per score;
+ * free tier per the Jul 15 2026 model: 500 credits on key mint, +500 per
+ * referral, 1,500 cap — see the K1 self-mint plan). Returns the detected
+ * reasoning regime, which the app maps to the best-suited model via
+ * lib/models.ts.
  *
- * This mirrors the hosted API's scoring contract
- * (LogicScoreRequest / LogicScoreResponse); keep in sync with the API.
+ * Contract source: the Kongen scoring endpoint +
+ * kongen/models/schemas.py (LogicScoreRequest / LogicScoreResponse).
  *
- * KNOWN LIMITATION: api.kongenlabs.life rejects arbitrary origins at CORS
- * preflight ("Disallowed CORS origin" for http://localhost:5173). Until
- * the app's origin is added to the API's cors_origins allowlist,
- * browser-direct score calls will fail from the PWA shell and the app
- * degrades to default-model routing (by design — routing is key-gated and
- * every score call is wrapped in try/catch). An MV3 extension shell is
- * NOT affected: host_permissions bypass CORS.
+ * KNOWN LIMITATION (verified Jul 15 2026): api.kongenlabs.life currently
+ * rejects arbitrary origins at CORS preflight ("Disallowed CORS origin"
+ * for http://localhost:5173). Until the app's origin is added to the API's
+ * cors_origins allowlist, browser-direct score calls will fail from the
+ * PWA shell and the app degrades to default-model routing (by design —
+ * routing is key-gated and every score call is wrapped in try/catch).
+ * The MV3 extension shell is NOT affected: host_permissions bypass CORS.
+ * Open question  — see the scaffold report.
  */
 
 import type { Regime } from "./models";

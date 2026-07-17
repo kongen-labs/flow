@@ -99,7 +99,7 @@ export function MetadataRibbon({
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Paid-vs-frontier comparison for the cost popover (a
+  // Paid-vs-frontier comparison for the cost popover (Jul 16 2026 —
   // comparison, not definition). Providers read once per ribbon mount; a
   // key change mid-session refreshes on the next re-render/remount, which
   // is fine for an "est." label.
@@ -166,9 +166,9 @@ export function MetadataRibbon({
           triggerClassName="hover:text-foreground transition-colors"
           trigger={<span>${costUsd.toFixed(4)}</span>}
         >
-          {/* Paid vs frontier: two figures + highlighted
-              delta; horizontal dividers between the charge rows (reads
-              as a mini-statement); the old definition
+          {/* Paid vs frontier (Jul 16): two figures + highlighted
+              delta; horizontal dividers between the charge rows (the maintainer,
+              Jul 17 — reads as a mini-statement); the old definition
               survives as the footnote. */}
           <div className="divide-y divide-border/60 text-[11px]">
             <div className="flex items-baseline justify-between gap-3 pb-1.5">
@@ -233,7 +233,7 @@ export function MetadataRibbon({
         <span className="flex-1" />
         <div className="flex items-center gap-0.5">
           {/* Relevance indicator — default state gets a muted, always-visible
-              affordance (keep the default icon visible on the
+              affordance (Jul 16: "make the default icon visible on the
               chat") so every message can reach the signal popover, including
               re-pinning after choosing Default. */}
           {(!signal || signal === "default") && messageId && onSignalChange && (
@@ -267,14 +267,14 @@ export function MetadataRibbon({
                   signal === "dismissed" && "text-muted-foreground/50 bg-muted/50",
                 )}>
                   {/* user-facing: internal critical → "pinned" (message),
-                      internal dismissed → "ignored" (label rename) */}
+                      internal dismissed → "ignored" (rename Jul 16) */}
                   {signal === "critical" && <Pin className="h-2.5 w-2.5" />}
                   {signal === "dismissed" && <Ghost className="h-2.5 w-2.5" />}
                   {signal === "critical" ? "pinned" : "ignored"}
                 </span>
               }
             >
-              {/* Actionable popover: change the
+              {/* Actionable popover (live testing Jul 16): change the
                   signal right here. Same update path as the Relevance
                   selector; picking Default unmounts this chip, closing the
                   popover with it. */}

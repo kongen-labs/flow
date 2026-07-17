@@ -47,10 +47,10 @@ describe("isAnaphoricFollowUp", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Multi-topic scenario: six unrelated topics in one conversation.
+// the multi-topic scenario: six unrelated topics in one conversation.
 // ---------------------------------------------------------------------------
 
-const MULTI_TOPIC_HISTORY: StoredMessage[] = [
+const FIZ_HISTORY: StoredMessage[] = [
   msg("u1", "user", "Summarize this meeting transcript: we agreed to ship the beta in March"),
   msg("a1", "assistant", "The team agreed to ship the beta in March and assign QA ownership to Dana."),
   msg("u2", "user", "Tell me about Turkish Van cats"),
@@ -69,10 +69,10 @@ const MULTI_TOPIC_HISTORY: StoredMessage[] = [
   msg("a8", "assistant", "Shanghai's maglev runs 431 km/h; the L0 prototype hit 603 km/h."),
 ];
 
-describe("selectContext — relevance scope (multi-topic scenario)", () => {
+describe("selectContext — relevance scope (the multi-topic scenario)", () => {
   it("a maglev follow-up keeps the maglev chain + recency, excludes cats/pasta/Peru", () => {
     const sel = selectContext(
-      MULTI_TOPIC_HISTORY,
+      FIZ_HISTORY,
       "Could maglev trains work between US cities?",
     );
     const forwardedIds = sel.forwarded.map((l) => l.id);
@@ -92,7 +92,7 @@ describe("selectContext — relevance scope (multi-topic scenario)", () => {
 
   it("pasta chain reunites incl. the 'bake or boil it?' pronoun follow-up", () => {
     const sel = selectContext(
-      MULTI_TOPIC_HISTORY,
+      FIZ_HISTORY,
       "Which pasta shape holds the most sauce?",
     );
     const reason = (id: string) =>
@@ -111,19 +111,19 @@ describe("selectContext — relevance scope (multi-topic scenario)", () => {
   });
 
   it("an anaphoric new prompt joins the most recent chain", () => {
-    const sel = selectContext(MULTI_TOPIC_HISTORY, "should I try riding it someday?");
+    const sel = selectContext(FIZ_HISTORY, "should I try riding it someday?");
     const forwardedIds = sel.forwarded.map((l) => l.id);
     expect(forwardedIds).toEqual(["u7", "a7", "u8", "a8"]); // maglev
   });
 
   it("a fresh topic sends only the recency window", () => {
-    const sel = selectContext(MULTI_TOPIC_HISTORY, "What is the capital of Mongolia?");
+    const sel = selectContext(FIZ_HISTORY, "What is the capital of Mongolia?");
     expect(sel.forwarded.map((l) => l.id)).toEqual(["u7", "a7", "u8", "a8"]);
     expect(sel.forwarded.every((l) => l.reason === "recent")).toBe(true);
   });
 
   it("critical (flame) messages are forwarded from anywhere", () => {
-    const history = MULTI_TOPIC_HISTORY.map((m) =>
+    const history = FIZ_HISTORY.map((m) =>
       m.id === "u1" ? { ...m, signal: "critical" as const } : m,
     );
     const sel = selectContext(history, "Could maglev trains work between US cities?");
@@ -132,7 +132,7 @@ describe("selectContext — relevance scope (multi-topic scenario)", () => {
   });
 
   it("dismissed (ghost) always wins over every inclusion rule", () => {
-    const history = MULTI_TOPIC_HISTORY.map((m) =>
+    const history = FIZ_HISTORY.map((m) =>
       m.id === "a8" ? { ...m, signal: "dismissed" as const } : m,
     );
     // a8 is in the matched chain AND the recency window — still out.
@@ -173,8 +173,8 @@ describe("selectContext — everything scope (escape hatch) + mechanics", () => 
 
   it("IS the send path: buildTurns delegates to the same selection", () => {
     // If these ever diverge, the chain view would lie about the payload.
-    expect(buildTurns(MULTI_TOPIC_HISTORY, "Could maglev trains work between US cities?")).toEqual(
-      selectContext(MULTI_TOPIC_HISTORY, "Could maglev trains work between US cities?").turns,
+    expect(buildTurns(FIZ_HISTORY, "Could maglev trains work between US cities?")).toEqual(
+      selectContext(FIZ_HISTORY, "Could maglev trains work between US cities?").turns,
     );
     expect(buildTurns(history, "next", "everything")).toEqual(
       selectContext(history, "next", { scope: "everything" }).turns,
@@ -184,15 +184,15 @@ describe("selectContext — everything scope (escape hatch) + mechanics", () => 
   it("per-send override: one full-history send, then back to relevant", () => {
     const prompt = "Could maglev trains work between US cities?";
     // The override send forwards everything except dismissed/empty...
-    const overridden = buildTurns(MULTI_TOPIC_HISTORY, prompt, "everything");
-    expect(overridden).toHaveLength(MULTI_TOPIC_HISTORY.length + 1); // + new prompt
+    const overridden = buildTurns(FIZ_HISTORY, prompt, "everything");
+    expect(overridden).toHaveLength(FIZ_HISTORY.length + 1); // + new prompt
     expect(overridden).toEqual(
-      selectContext(MULTI_TOPIC_HISTORY, prompt, { scope: "everything" }).turns,
+      selectContext(FIZ_HISTORY, prompt, { scope: "everything" }).turns,
     );
     // ...while the next send (no override) is relevance-scoped again.
-    const next = buildTurns(MULTI_TOPIC_HISTORY, prompt);
+    const next = buildTurns(FIZ_HISTORY, prompt);
     expect(next).toHaveLength(5); // maglev chain (4) + new prompt
-    expect(next).toEqual(selectContext(MULTI_TOPIC_HISTORY, prompt).turns);
+    expect(next).toEqual(selectContext(FIZ_HISTORY, prompt).turns);
   });
 
   it("truncates long previews to ~80 chars and flattens whitespace", () => {

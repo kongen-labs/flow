@@ -8,6 +8,7 @@ import {
   SIGNAL_MEANING,
 } from "./explain-copy";
 import { REGIMES } from "./models";
+import { NO_PROVIDER_KEYS_MESSAGE } from "./send";
 
 describe("explainer copy completeness", () => {
   it("covers every regime", () => {
@@ -60,13 +61,37 @@ describe("explainer copy completeness", () => {
   });
 
   it("names the context states Smart Reference / Full history (chip copy)", () => {
-    // The chip is a state indicator, and its copy ties
+    // The chip is a state indicator (Jul 16 2026), and its copy ties
     // the chain view to what Smart Reference selected.
     expect(LABEL_EXPLAIN.smartReferenceChip).toContain("Smart Reference");
     expect(LABEL_EXPLAIN.smartReferenceChip).toContain("chain view");
     expect(LABEL_EXPLAIN.fullHistoryChip).toContain("Smart Reference");
+    // First-use note: restates audited step 4 and names BOTH engagement
+    // touchpoints (chain icon + the chip's one-send full-history toggle).
+    expect(LABEL_EXPLAIN.smartReferenceFirstUse).toContain(
+      "selected automatically",
+    );
+    expect(LABEL_EXPLAIN.smartReferenceFirstUse).toContain("chain icon");
+    expect(LABEL_EXPLAIN.smartReferenceFirstUse).toContain(
+      "send full history with the next prompt",
+    );
     // Cost popover fallback line exists (comparison needs a routed reply).
     expect(LABEL_EXPLAIN.costNoBaseline).toContain("routed reply");
+  });
+
+  it("no-provider-keys indicator shares the send-guard vocabulary", () => {
+    // The chat mode/model attention chip and CTA exist...
+    expect(LABEL_EXPLAIN.providerKeysMissing).toBe("No provider keys");
+    expect(LABEL_EXPLAIN.addProviderKey).toBeTruthy();
+    // ...and reuse the approved provider-keys body verbatim (no new claim).
+    expect(LABEL_EXPLAIN.providerKeys).toContain("at least one is needed");
+    // Indicator, popover body, and the send-time guard all say "provider
+    // key(s)" — the indicator must never contradict the failure it predicts.
+    expect(LABEL_EXPLAIN.providerKeysMissing.toLowerCase()).toContain(
+      "provider key",
+    );
+    expect(NO_PROVIDER_KEYS_MESSAGE.toLowerCase()).toContain("provider key");
+    expect(LABEL_EXPLAIN.providerKeys.toLowerCase()).toContain("key");
   });
 
   it("brands the savings surface Kongen Routing, powered by Kongen Logic", () => {
@@ -74,6 +99,6 @@ describe("explainer copy completeness", () => {
     expect(LABEL_EXPLAIN.kongenRouting).toContain("Kongen Logic");
     // Retired claim must not resurface in explainer copy.
     const all = Object.values(LABEL_EXPLAIN).join(" ").toLowerCase();
-    expect(all).not.toContain("no login");
+    expect(all).not.toMatch(/no[\s-]?login/i);
   });
 });

@@ -1,12 +1,10 @@
 /**
- * Provider/model routing table (PROVIDER_MODELS, pick_model,
+ * Provider/model routing table — TypeScript port of
+ * the Kongen routing service (PROVIDER_MODELS, pick_model,
  * estimate_savings, find_model_provider).
  *
- * Mirrors the hosted routing catalogue; keep in sync with the API.
- *
- * PRICING: per-token costs below are the providers' public list prices,
- * as of July 2026. Update alongside the catalogue when providers change
- * their pricing.
+ * MUST STAY IN SYNC with the backend table. If the backend catalogue
+ * changes, port the change here.
  */
 
 export type Provider =
@@ -124,7 +122,7 @@ export interface PickedModel {
 }
 
 /**
- * Pick the cheapest model that covers the given regime.
+ * Pick the lowest-cost model that covers the given regime.
  * Mirror of routing.py pick_model.
  */
 export function pickModel(
@@ -162,8 +160,9 @@ export function pickModel(
  * Deliberately NOT part of the PROVIDER_MODELS routing mirror (which must
  * stay in sync with the backend table): this table exists only for the
  * counterfactual "what would the same tokens have cost on the latest
- * frontier model" math. claude-fable-5 is baseline-only and never a
- * routing candidate.
+ * frontier model" math (Jul 16 2026 — 'the ROI is towards
+ * latest model Fable 5 on Anthropic for ex'). claude-fable-5 is
+ * baseline-only and never a routing candidate.
  */
 export const FLAGSHIP_MODELS: Record<Provider, ModelSpec> = {
   anthropic: { name: "claude-fable-5", regimes: ["exhaustive"], inputCost: 10.0, outputCost: 50.0 },
@@ -257,7 +256,7 @@ export function findModelProvider(
 
 /**
  * Default model when no Kongen key is present (no routing): the user's
- * chosen default, or the cheapest "moderate" model across available
+ * chosen default, or the lowest-cost "moderate" model across available
  * providers as a sensible fallback.
  */
 export function defaultModel(

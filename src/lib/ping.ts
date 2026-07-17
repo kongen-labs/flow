@@ -1,5 +1,5 @@
 /**
- * Key validation pings — cheapest possible authenticated call per provider.
+ * Key validation pings — lowest-cost possible authenticated call per provider.
  *
  * Providers: GET the model-list endpoint (free, no tokens billed).
  * Kongen: POST /v1/logic/score with a one-word prompt — this DOES spend

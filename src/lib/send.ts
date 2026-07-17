@@ -1,13 +1,14 @@
 /**
- * Send pipeline — client-side orchestration:
+ * Send pipeline — client-side re-home of the server orchestration that
+ * lived in the Kongen send service:
  *
  *   1. Classify + persist the user message (IndexedDB).
  *   2. Route:  pinned model       → findModelProvider
  *              Auto (Kongen key)  → POST /v1/logic/score → regime → pickModel
  *              score fails        → defaultModel (graceful runtime fallback)
- *              Auto, key missing  → error (a Kongen key is required for
- *                                   Auto; first-run collects it, so this
- *                                   is normally unreachable)
+ *              Auto, key missing  → error (Kongen key is required per the
+ *                                   Jul 15 2026 directive; first-run collects
+ *                                   it, so this is normally unreachable)
  *   3. Stream from the provider browser-direct with the user's own key.
  *   4. Persist the assistant message with routing + cost metadata.
  *
@@ -33,6 +34,15 @@ import {
 import { streamChat, type ChatTurn } from "./providers";
 
 export type RoutedVia = "kongen" | "pinned" | "default";
+
+/**
+ * Zero-provider-keys send guard message. Exported so the chat-input
+ * attention indicator (LABEL_EXPLAIN.providerKeysMissing / "No provider
+ * keys") shares one vocabulary with the send-time error — the indicator and
+ * the failure must never contradict each other (Jul 17 2026).
+ */
+export const NO_PROVIDER_KEYS_MESSAGE =
+  "No provider keys configured. Add at least one provider key in Settings.";
 
 export interface RoutingDecision {
   provider: string;
@@ -85,9 +95,7 @@ export async function routePrompt(opts: {
 }): Promise<RoutingDecision> {
   const providers = availableProviders(opts.keys);
   if (providers.length === 0) {
-    throw new Error(
-      "No provider keys configured. Add at least one provider key in Settings.",
-    );
+    throw new Error(NO_PROVIDER_KEYS_MESSAGE);
   }
 
   // Pinned model wins over everything.

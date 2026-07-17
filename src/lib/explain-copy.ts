@@ -1,8 +1,9 @@
 /**
- * Explainer copy — one plain-language line per informational label
- * (tapping an info label shows more info so it is clear what it is).
+ * Explainer copy — one plain-language line per informational label (the maintainer,
+ * Jul 16 2026: "for each of the info labels, if I tap them show more info
+ * so that it is clear what they are").
  *
- * TERMINOLOGY: user-facing "Pin/Pinned" (message) replaces
+ * TERMINOLOGY (same day): user-facing "Pin/Pinned" (message) replaces
  * "Flagged/flame" ("flagged is used to report issues"), and "Ignore/
  * Ignored" replaces "Dismissed". Internal signal values stay `critical` /
  * `dismissed` (storage + classifier untouched). Collision rule: model
@@ -84,8 +85,8 @@ export const LABEL_EXPLAIN = {
   tokens:
     "Input + output tokens for this reply. Tokens are how providers meter usage — you pay per token with your own key.",
   // Survives as the small footnote under the paid-vs-frontier comparison
-  // (the cost popover shows what you paid vs what the frontier model
-  // would have cost, not a definition).
+  // (Jul 16 2026: the cost popover shows what you paid vs what the
+  // frontier model would have cost, not a definition).
   cost: "What this reply actually cost with your key, at the provider's published token prices.",
   costNoBaseline:
     "The frontier comparison needs a routed reply — this one didn't store enough data to estimate it.",
@@ -96,15 +97,25 @@ export const LABEL_EXPLAIN = {
     "Estimated difference vs sending the same tokens to the latest frontier model of your providers. An estimate — hence “est.”",
   modelSwitched:
     "Routing picked a different model than the previous reply — each prompt is scored on its own.",
-  // Context chip states (the chip shows the CURRENT
+  // Context chip states (Jul 16 2026: the chip shows the CURRENT
   // context state — "Smart Reference" echoes the About-Flow "only the
   // relevant part of your conversation is referenced" — not an on/off
   // toggle label). Used as the chip's title per state.
   smartReferenceChip:
     "Smart Reference: each prompt is sent with only the relevant part of the conversation — its topic chain, your last two exchanges, and pinned messages. The chain view on any reply shows exactly what Smart Reference selected. Tap to send full history with the next prompt instead.",
+  // First-use note next to the chip (Jul 17 2026: "add similar note
+  // to say 'relevant messages from conversation automatically selected'
+  // and show how to engage with the feature"). Restates audited About-Flow
+  // step 4 + the approved chip explainer above — no new claims: "selected
+  // automatically" = "Flow forwards the messages your new prompt relates
+  // to" / "what Smart Reference selected"; the two engagement touchpoints
+  // are the chain icon (chain view) and the chip's one-send full-history
+  // toggle (verbatim from smartReferenceChip's last sentence).
+  smartReferenceFirstUse:
+    "Smart Reference: relevant messages from your conversation are selected automatically. Tap the chain icon on any reply to see what was included — or tap the Smart Reference chip to send full history with the next prompt.",
   fullHistoryChip:
     "Sends the whole conversation (except ignored messages) with your next prompt only, then reverts to Smart Reference.",
-  // Brand split: "Kongen Routing" is the user-facing
+  // Brand split (Jul 17 2026): "Kongen Routing" is the user-facing
   // product surface; "Kongen Logic" is the scoring API brand and appears
   // in the body, not the label.
   kongenRouting:
@@ -113,4 +124,12 @@ export const LABEL_EXPLAIN = {
     "Flow routes every Auto prompt through Kongen's scorer, so a key is required. Free — you start with 500 routed prompts.",
   providerKeys:
     "Your own API keys for the model vendors. Answers stream directly from them with your key; at least one is needed to send.",
+  // Attention state on the chat mode/model selector when NO provider key is
+  // present (Jul 17 2026: "if there are no keys available,
+  // make that an indicator"). Vocabulary is deliberately aligned with the
+  // send-time guard (lib/send.ts NO_PROVIDER_KEYS_MESSAGE) — both say
+  // "provider keys" so the indicator and the error read as one story. The
+  // popover body reuses `providerKeys` above verbatim (no new claims).
+  providerKeysMissing: "No provider keys",
+  addProviderKey: "Add a key",
 } as const;

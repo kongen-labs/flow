@@ -63,7 +63,7 @@ function UserSignalRow({
       {/* Signal icon */}
       {signal === "critical" && <Pin className="h-2.5 w-2.5 text-red-500" />}
       {signal === "dismissed" && <Ghost className="h-2.5 w-2.5 text-muted-foreground/40" />}
-      {/* Default state: muted always-visible affordance —
+      {/* Default state: muted always-visible affordance (Jul 16) —
           opens the same actionable popover, so re-pinning is one tap. */}
       {signal === "default" && (
         <Explainer

@@ -3,10 +3,16 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./globals.css";
 import { AppLockGate } from "./components/app-lock-gate";
+import { InstallHost } from "./components/install-sheet";
+import { initInstallPromptCapture } from "./lib/install";
 import { initTheme } from "./lib/theme";
 
 // Apply persisted (or system) theme before first paint to avoid a flash.
 initTheme();
+
+// Capture beforeinstallprompt at boot — it fires once, early; without
+// this, the in-app "Install Flow" button could never trigger it.
+initInstallPromptCapture();
 
 // Offline shell: cache app shell + hashed assets, never vendor API calls
 // (see public/sw.js). Dev is excluded so Vite HMR stays untouched.
@@ -23,6 +29,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     {/* App Lock wraps the whole tree: while locked, nothing else mounts. */}
     <AppLockGate>
       <App />
+      {/* Install sheet host: opened by any install affordance or the
+          #install deep link (the app IS the website's download surface). */}
+      <InstallHost />
     </AppLockGate>
   </React.StrictMode>,
 );

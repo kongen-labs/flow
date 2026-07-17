@@ -1,7 +1,8 @@
 import type { Config } from "tailwindcss";
 
-// Kongen Labs design tokens (minus @tailwindcss/typography, which is
-// unused by the flow components we carry) — no net-new design system.
+// Ported 1:1 from apps/kongen-web/tailwind.config.ts (minus @tailwindcss/typography,
+// which is unused by the flow components we carry). Kongen design tokens —
+// no net-new design system.
 const config: Config = {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],

@@ -29,6 +29,11 @@ interface ChatViewProps {
   fullHistoryOnce?: boolean;
   onToggleFullHistoryOnce?: () => void;
   routingIndicator?: ReactNode;
+  /** Whether at least one provider key is present (drives the chat-input
+   * "No provider keys" attention indicator). */
+  hasProviderKeys?: boolean;
+  /** Deep-link to Settings → Keys from the attention indicator popover. */
+  onAddKey?: () => void;
 }
 
 export function ChatView({
@@ -45,6 +50,8 @@ export function ChatView({
   fullHistoryOnce,
   onToggleFullHistoryOnce,
   routingIndicator,
+  hasProviderKeys,
+  onAddKey,
 }: ChatViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -217,6 +224,8 @@ export function ChatView({
         disabled={isStreaming}
         mode={mode}
         onModeChange={onModeChange}
+        hasProviderKeys={hasProviderKeys}
+        onAddKey={onAddKey}
         fullHistoryOnce={fullHistoryOnce}
         onToggleFullHistoryOnce={
           contextScope !== "everything" ? onToggleFullHistoryOnce : undefined

@@ -1,12 +1,14 @@
 /**
  * Local BYO-key management — shared by the first-run screen and Settings.
  *
- * Unlike the hosted app (which stores keys server-side), this version
- * writes to the local KeyStore only. Keys never leave the machine.
+ * Local re-home of apps/kongen-web/components/flow/provider-keys.tsx: the
+ * original stores keys server-side (Firestore AES-GCM); this version writes
+ * to the local KeyStore only. Keys never leave the machine.
  *
- * Kongen key is REQUIRED: first-run collects it before chatting, so it
- * renders as its own mandatory section (KongenKeySection) ahead of the
- * BYO provider keys (ProviderKeysSection).
+ * Kongen key is REQUIRED (Jul 15 2026 — supersedes the
+ * original "gracefully key-gated / skippable" design): first-run collects it
+ * before chatting, so it renders as its own mandatory section
+ * (KongenKeySection) ahead of the BYO provider keys (ProviderKeysSection).
  *
  * Mobile-first: 44px touch targets below md, 16px input font so iOS Safari
  * does not auto-zoom, per-key "test" ping (lib/ping.ts), and a "Get a key"
@@ -36,7 +38,7 @@ import { PROVIDER_LABELS, PROVIDERS, type Provider } from "@/lib/models";
 import { pingKey, type PingResult } from "@/lib/ping";
 import { Explainer } from "./explainer";
 
-const PROVIDER_PLACEHOLDERS: Record<Provider, string> = {
+export const PROVIDER_PLACEHOLDERS: Record<Provider, string> = {
   anthropic: "sk-ant-...",
   openai: "sk-...",
   google: "AIza...",
@@ -51,7 +53,7 @@ const PROVIDER_PLACEHOLDERS: Record<Provider, string> = {
  * `return_to=` confirmed live; OpenAI/DeepSeek bot-block HEAD probes, paths
  * per current docs).
  */
-const PROVIDER_KEY_URLS: Record<Provider, string> = {
+export const PROVIDER_KEY_URLS: Record<Provider, string> = {
   // 301s from the old console.anthropic.com/settings/keys — link the final home.
   anthropic: "https://platform.claude.com/settings/keys",
   openai: "https://platform.openai.com/api-keys",
@@ -60,17 +62,23 @@ const PROVIDER_KEY_URLS: Record<Provider, string> = {
   deepseek: "https://platform.deepseek.com/api_keys",
 };
 
-// Deep link into the Kongen dashboard's key management: logged-out
-// visitors get /login?redirect=%2Fkeys and land back on the keys page
-// after auth.
-// TODO: key-mint flow.
+// Deep link into the dashboard's key management (apps/kongen-web/app/keys):
+// logged-out visitors get /login?redirect=%2Fkeys and land back on the keys
+// page after auth (verified live Jul 15 2026).
+// TODO(K1): replace with the in-app self-mint flow once POST /v1/flow/keys
+// (email-verified, 500 free credits, referral codes) ships.
 export const KONGEN_SIGNUP_URL = "https://garden.kongenlabs.life/keys";
 
 /** 44px hit area on touch, compact on md+. */
 const TOUCH_ICON_BUTTON =
   "flex items-center justify-center min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 md:p-1.5 rounded-md transition-colors";
 
-function KeyRow({
+/**
+ * One key slot: input (commit on Enter / blur / save icon), stored state
+ * with test-ping + remove, "Get a key" deep link. Exported for the
+ * first-run wizard, which reuses these exact contracts one slot at a time.
+ */
+export function KeyRow({
   slot,
   label,
   placeholder,
@@ -79,6 +87,7 @@ function KeyRow({
   accent,
   keyUrl,
   keyUrlLabel,
+  onPendingChange,
 }: {
   slot: KeySlot;
   label: string;
@@ -89,6 +98,14 @@ function KeyRow({
   /** Link to the page where the user can create this key. */
   keyUrl?: string;
   keyUrlLabel?: string;
+  /**
+   * Fires when the input holds uncommitted text (Jul 17 2026: the
+   * wizard's primary button must enable on typed-but-unsaved keys — no
+   * paste → key-icon → Continue dance). Commit still happens on
+   * Enter/blur/save; blur fires before any button click, so by the time a
+   * primary action runs, pending text is already committed.
+   */
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const stored = keys.get(slot);
   const [value, setValue] = useState("");
@@ -111,6 +128,7 @@ function KeyRow({
     if (!value.trim()) return;
     keys.set(slot, value);
     setValue("");
+    onPendingChange?.(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
     onChanged();
@@ -179,7 +197,10 @@ function KeyRow({
             <input
               type="password"
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => {
+                setValue(e.target.value);
+                onPendingChange?.(Boolean(e.target.value.trim()));
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSave();
               }}
@@ -269,7 +290,7 @@ export function KongenKeySection({
           }
         />
       </div>
-      <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+      <p className="text-[13px] md:text-xs text-muted-foreground/70 leading-relaxed">
         Flow routes with Kongen: each Auto prompt is scored (1 KT) and sent to
         the model best suited to it; pinned-model prompts skip scoring and
         cost nothing. Start with 500 free routed prompts — keys are free at{" "}
@@ -336,7 +357,7 @@ export function ProviderKeysSection({
         />
       ))}
       {configured.length === 0 && (
-        <p className="text-[11px] text-muted-foreground/70">
+        <p className="text-[13px] md:text-xs text-muted-foreground/70">
           Paste at least one key to chat. Keys go straight from your browser
           to the provider — no server in between.
         </p>

@@ -5,7 +5,7 @@
  * baseline — what the same tokens would have cost on the LATEST FRONTIER
  * model of the user's configured providers, lib/models.ts flagshipFor,
  * e.g. Claude Fable 5 with an Anthropic key — is an estimate; see the
- * legal note in docs/marketing/flow-local/free-to-try-model.md §4). Never
+ * legal note in the pricing policy doc §4). Never
  * framed as bargain-hunting.
  *
  * MIXED-HISTORY NOTE (baseline change, Jul 16 2026): messages stored
@@ -116,7 +116,7 @@ export function formatSavedUsd(n: number): string {
 }
 
 /**
- * Compact ROI line for the sidebar footer:
+ * Compact ROI line for the sidebar footer (Jul 17 2026):
  * "$1.70 saved on $0.42 spent (80% less)". The percentage is
  * saved / (saved + spent) — i.e. how much less was paid than the frontier
  * baseline (baseline = spent + saved), same identity as sumSavings.

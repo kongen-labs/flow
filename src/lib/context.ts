@@ -6,13 +6,14 @@
  * context drawer render the SAME selection — what the user sees is exactly
  * what is forwarded.
  *
- * v2: conversations are segmented into TOPIC CHAINS and a new
+ * v2 (Jul 16 2026 — "why are all the prompts of the conversation being
+ * included"): conversations are segmented into TOPIC CHAINS and a new
  * prompt only carries its own chain, a recency safety net, and flagged
  * messages — unrelated topics (cats, pasta, Peru...) stay home.
  *
  * Chain segmentation (one pass, oldest → newest):
  *   - user message: joins the best word-overlap chain (stop-word-filtered
- *     content words); short/anaphoric follow-ups
+ *     content words — the kongen-web heuristic); short/anaphoric follow-ups
  *     ("do you bake or boil it?" — pronouns / ≤2 content words) inherit the
  *     PREVIOUS turn's chain by adjacency; no overlap → starts a new chain.
  *   - assistant message: joins the chain of the prompt it answered
@@ -33,9 +34,10 @@
  * inclusion only costs tokens — hence the recency net, adjacency
  * inheritance for pronouns, and ≥1-word overlap (not a similarity score).
  *
- * NOTE (truth boundary): About-Flow copy revisions go through Kongen
- * Labs' claims review — do not edit about-flow.tsx from here; approved
- * wording is applied verbatim.
+ * NOTE (truth boundary): the About-Flow copy revision for relevance
+ * selection is being drafted by the content team — do not edit
+ * about-flow.tsx from here; the approved wording is applied verbatim as a
+ * follow-up.
  */
 
 import type { ChatTurn } from "./providers";
@@ -84,7 +86,7 @@ export interface ContextSelection {
 // Topic words
 // ---------------------------------------------------------------------------
 
-/** Chain-viewer stop words, extended with common filler. */
+/** kongen-web chain-viewer stop words, extended with common filler. */
 const STOP_WORDS = new Set([
   "the", "and", "for", "with", "that", "this", "was", "are", "you", "can",
   "should", "what", "how", "why", "when", "where", "which", "who", "whom",

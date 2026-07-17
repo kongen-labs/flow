@@ -2,7 +2,7 @@
  * Settings → "App Lock" section. Enable/disable the biometric lock,
  * idle auto-lock, and "Lock now". Rendered inside SettingsDrawer.
  *
- * Honesty contract: always show which mode the user
+ * Honesty contract (product directive): always show which mode the user
  * actually got — feature detection decides, not marketing. The mode copy
  * lives in lib/app-lock.ts (LOCK_MODE_COPY) where unit tests enforce that
  * gate mode never claims encryption.
@@ -55,16 +55,16 @@ export function AppLockSettings() {
     <div className="space-y-2">
       {/* Group header ("Security") comes from the settings drawer; this
           sub-label keeps the feature name visible inside the group. */}
-      <h4 className="text-[11px] font-medium text-foreground">App Lock</h4>
+      <h4 className="text-sm font-medium md:text-xs">App Lock</h4>
 
       {!api.supported ? (
-        <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+        <p className="text-[13px] md:text-xs leading-relaxed text-muted-foreground/70">
           Face ID / fingerprint lock isn&apos;t available in this browser
           (passkeys unsupported).
         </p>
       ) : !api.enabled ? (
         <>
-          <p className="text-[11px] leading-relaxed text-muted-foreground/70">
+          <p className="text-[13px] md:text-xs leading-relaxed text-muted-foreground/70">
             Require Face ID, fingerprint, or your device PIN to open Flow.
             Where your browser supports passkey encryption (PRF), your API
             keys are also encrypted at rest; otherwise this is a screen lock
@@ -102,13 +102,13 @@ export function AppLockSettings() {
               )}
               {LOCK_MODE_COPY[api.mode!].title}
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-[13px] md:text-xs leading-relaxed text-muted-foreground">
               {LOCK_MODE_COPY[api.mode!].body}
             </p>
           </div>
 
           {/* Idle auto-lock */}
-          <label className="block text-[11px] text-muted-foreground">
+          <label className="block text-[13px] md:text-xs text-muted-foreground">
             Auto-lock when idle
             <ThemedSelect
               value={api.idleMinutes}
@@ -141,7 +141,7 @@ export function AppLockSettings() {
               Turn off
             </button>
           </div>
-          <p className="text-[10px] leading-relaxed text-muted-foreground/60">
+          <p className="text-[11px] leading-relaxed text-muted-foreground/60">
             Lost the passkey (new device, credential removed)? The lock
             screen&apos;s &ldquo;Can&apos;t unlock?&rdquo; resets App Lock —
             that wipes stored API keys; conversations stay.

@@ -6,7 +6,8 @@ import type { RoutedVia } from "@/lib/send";
 import { Explainer } from "../explainer";
 
 /**
- * Routing indicator for the local app's three routing states:
+ * Ported from apps/kongen-web/components/flow/routing-indicator.tsx and
+ * extended for the local app's three routing states:
  *  - "kongen"  → routed via Kongen Logic (regime shown)
  *  - "pinned"  → user pinned a model
  *  - "default" → score call failed at runtime — graceful fallback to the

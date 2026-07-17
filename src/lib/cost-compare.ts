@@ -1,7 +1,8 @@
 /**
  * Per-message cost comparison — "what you paid vs what the same reply would
- * have cost on the latest frontier model of your keyed providers" (the
- * cost explainer is a COMPARISON, not a definition).
+ * have cost on the latest frontier model of your keyed providers" (the maintainer
+ * directive, Jul 16 2026: the cost explainer is a COMPARISON, not a
+ * definition).
  *
  * Baseline preference order:
  *   1. TOKEN RECOMPUTE — stored tokens_in/tokens_out priced at the

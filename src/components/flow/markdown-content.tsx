@@ -18,7 +18,7 @@ export default function MarkdownContent({ content }: { content: string }) {
   return (
     <ReactMarkdown
       // remark-gfm: tables, strikethrough, task lists, autolinks —
-      // without it GFM tables render as raw pipe text (GFM regression guard).
+      // without it GFM tables render as raw pipe text (bug Jul 16).
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex]}
       components={{

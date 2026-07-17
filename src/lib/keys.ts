@@ -88,6 +88,17 @@ export function availableProviders(store: KeyStore): Provider[] {
 }
 
 /**
+ * True when at least one provider key is present — the seam behind the chat
+ * mode/model selector's attention state. When false the selector shows the
+ * "No provider keys" indicator instead of Auto/a model, and sends are guarded
+ * (lib/send.ts NO_PROVIDER_KEYS_MESSAGE). Kongen key alone does not count —
+ * you can route but not answer without a provider key.
+ */
+export function hasProviderKey(store: KeyStore): boolean {
+  return availableProviders(store).length > 0;
+}
+
+/**
  * App Lock session override. While an encrypted-mode session is unlocked,
  * the gate (components/app-lock-gate) registers the in-memory decrypted
  * store here; locking clears it. keys.ts must NOT import app-lock (module
@@ -101,7 +112,7 @@ export function setSessionKeyStore(store: KeyStore | null): void {
 
 /**
  * No-op store served while an encrypted App Lock is active but this tab
- * has no unlocked session (security review finding F1b):
+ * has no unlocked session (security review F1b, Jul 17 2026 review):
  * without this, a locked/lagging tab (or any pre-unlock code path) would
  * fall back to the plaintext LocalStorageKeyStore and a key write there
  * would RE-CREATE flow-local:keys:v1 in cleartext beside the ciphertext.
@@ -119,7 +130,7 @@ const EMPTY_KEY_STORE: KeyStore = {
  * True when App Lock encrypted mode governs this storage. Ciphertext
  * presence alone is authoritative — the config blob is attacker-writable
  * (localStorage) and its deletion/downgrade must not re-open the
- * plaintext path (security review finding F2).
+ * plaintext path (security review F2).
  */
 function encryptedLockPresent(storage: StringStorage): boolean {
   if (storage.getItem(ENCRYPTED_KEYS_KEY) !== null) return true;

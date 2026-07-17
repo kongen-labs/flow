@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Kongen Labs design tokens
+/* Ported from apps/kongen-web/app/globals.css — Kongen Labs design tokens
    (Paper + Red). Do not fork these values; if the dashboard tokens change,
    re-port. */
 
@@ -89,7 +89,7 @@
 
     /* Dark: keep solid brand fills close to the light red (slight raise so
        they don't go muddy on dark paper), but the text/icon variant goes
-       beige/creme (Paper family) — #a3262c text on dark fails
+       beige/creme (Paper family)  — #a3262c text on dark fails
        contrast (~2.3:1), and the lightened-rose alternative read too pink.
        --brand-fg dark ≈ #e6d4ad creme (~11:1 on --background). */
     --brand: 357 55% 45%;

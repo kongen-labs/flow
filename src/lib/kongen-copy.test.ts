@@ -1,7 +1,7 @@
 /**
  * Honesty contract for the "How does Kongen work" copy: assembled only
  * from approved language, best-suited framing, never "cheapest" (banned
- * framing), and the privacy boundary sentences present.
+ * framing, product directive), and the privacy boundary sentences present.
  */
 
 import { describe, expect, it } from "vitest";
@@ -49,7 +49,7 @@ describe("kongen-copy honesty contract", () => {
   });
 
   it("terminology guard: bare 'pinned prompts' only inside a 'pin a model' sentence", () => {
-    // Guard: "prompts on a pinned model" / "pinned-model prompts",
+    // guard: "prompts on a pinned model" / "pinned-model prompts",
     // never bare "pinned prompts" outside a sentence that says "pin a
     // model" — avoids collision with pinned MESSAGES.
     for (const block of KONGEN_HOW) {

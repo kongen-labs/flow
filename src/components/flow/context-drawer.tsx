@@ -1,6 +1,6 @@
 /**
- * Context drawer — shows what Smart Reference selected for the next
- * prompt, adapted for the local app:
+ * Context drawer — port of apps/kongen-web/components/flow/context-drawer.tsx
+ * (which was built but never wired in kongen-web), adapted for the local app:
  *
  * - Data comes from lib/context.ts selectContext — the SAME selection the
  *   send path uses, so the drawer shows the real forwarded/dropped split.

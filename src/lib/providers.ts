@@ -1,6 +1,6 @@
 /**
- * Browser-direct provider streaming layer — client-side streaming calls
- * to each vendor's API.
+ * Browser-direct provider streaming layer — the client-side re-home of the
+ * server-side httpx calls in the Kongen send service.
  *
  * All calls use plain fetch (no vendor SDKs) with the user's own key from
  * the local KeyStore. Keys never leave the machine except to the vendor

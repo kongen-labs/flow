@@ -2,3 +2,6 @@ node_modules/
 dist/
 *.local
 *.tsbuildinfo
+
+# Repo-root .gitignore ignores lib/ globally (Python artifacts); our TS source lives in src/lib — re-include it.
+!src/lib/

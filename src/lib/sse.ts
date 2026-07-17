@@ -1,7 +1,8 @@
 /**
  * Minimal SSE stream reader.
  *
- * Buffer-splitting shape: accumulate decoded chunks, split on the
+ * Buffer-splitting shape ported from apps/kongen-web/lib/flow-api.ts
+ * (sendMessage's reader loop): accumulate decoded chunks, split on the
  * blank-line event delimiter, keep the trailing partial event in the
  * buffer, and hand each complete event to the caller.
  */

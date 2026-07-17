@@ -2,7 +2,7 @@
  * Message-signal vocabulary + the pure signal-update transition.
  *
  * Lives in lib/ so the Pin/Default/Ignore wiring — the user-facing label
- * vocabulary (Pin/Ignore over Flag/Dismiss), the
+ * vocabulary (rename Jul 16 2026: Pin/Ignore over Flag/Dismiss), the
  * immutable state transition behind every signal control (ribbon popover,
  * relevance selector, user-row panel), and its downstream effect on
  * lib/context selectContext() — is testable in the node vitest environment

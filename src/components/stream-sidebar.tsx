@@ -1,6 +1,7 @@
 /**
- * Local stream list — an IndexedDB-backed conversation list, styled with
- * the sidebar tokens.
+ * Local stream list — replaces the server-backed
+ * apps/kongen-web/components/flow/stream-list.tsx with an IndexedDB-backed
+ * equivalent, styled with the same sidebar tokens.
  *
  * Mobile-first: swipe a row left to reveal rename/delete actions (hand-rolled
  * touch handlers, no library), inline rename, safe-area insets. Desktop keeps
@@ -24,6 +25,7 @@ import { formatRoiLine, formatSavedUsd } from "@/lib/savings";
 import { LABEL_EXPLAIN } from "@/lib/explain-copy";
 import { useAppLock } from "./app-lock-gate";
 import { Explainer } from "./explainer";
+import type { SettingsView } from "./settings-drawer";
 import type { StoredStream } from "@/lib/db";
 
 /** Width of the swipe-revealed action area (two 44px buttons). */
@@ -56,13 +58,14 @@ export function StreamSidebar({
   onNew: () => void;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
-  onOpenSettings: () => void;
+  /** Optional target view — the lock icon deep-links to Security. */
+  onOpenSettings: (view?: SettingsView) => void;
 }) {
   // Swipe state: which row is being dragged / left open.
   const touchStart = useRef<{ id: string; x: number; y: number } | null>(null);
   const suppressClick = useRef(false);
-  // Lock/Unlock in easy reach, next to settings.
-  // Enabled -> one tap locks now; disabled -> shown as
+  // Lock/Unlock in easy reach (Jul 17 2026: "get the Lock/Unlock icon
+  // next to settings"). Enabled -> one tap locks now; disabled -> shown as
   // a shortcut into the App Lock settings section (aids discovery).
   const appLock = useAppLock();
   const [drag, setDrag] = useState<{ id: string; dx: number } | null>(null);
@@ -116,7 +119,9 @@ export function StreamSidebar({
               <button
                 type="button"
                 onClick={
-                  appLock.enabled ? () => appLock.lockNow() : onOpenSettings
+                  appLock.enabled
+                    ? () => appLock.lockNow()
+                    : () => onOpenSettings("security")
                 }
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md hover:bg-sidebar-accent transition-colors md:min-h-0 md:min-w-0 md:p-1.5"
                 title={
@@ -134,7 +139,7 @@ export function StreamSidebar({
             )}
             <button
               type="button"
-              onClick={onOpenSettings}
+              onClick={() => onOpenSettings()}
               className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md hover:bg-sidebar-accent transition-colors md:min-h-0 md:min-w-0 md:p-1.5"
               title="Settings — keys, export, import"
             >
@@ -319,8 +324,8 @@ export function StreamSidebar({
         {/* Footer: branded lifetime savings counter (the retention artifact)
             + ROI line + wedge. "Kongen Routing" is the product surface;
             "Kongen Logic" (the scoring API brand) lives in the explainer
-            body. "No login" is a RETIRED claim (email-verified Kongen key
-            required) — approved phrasing is "No password, no profile." */}
+            body. The login-negation claim is RETIRED (email-verified Kongen
+            key required) — approved phrasing is "No password, no profile." */}
         <div className="border-t border-sidebar-border px-4 py-3 space-y-1">
           {lifetimeSavedUsd > 0 && (
             <Explainer

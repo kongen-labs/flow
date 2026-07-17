@@ -19,7 +19,7 @@ describe("routing table port", () => {
     }
   });
 
-  it("picks the cheapest capable model (mirror of routing.py)", () => {
+  it("picks the lowest-cost capable model (mirror of routing.py)", () => {
     // trivial with all providers → gemini-2.0-flash-lite (0.075 + 0.30)
     expect(pickModel("trivial", PROVIDERS).model).toBe("gemini-2.0-flash-lite");
     // exhaustive with all providers → deepseek-reasoner (0.55 + 2.19)
@@ -35,7 +35,7 @@ describe("routing table port", () => {
   it("respects provider preference", () => {
     const picked = pickModel("deep", PROVIDERS, "openai");
     expect(picked.provider).toBe("openai");
-    // cheapest deep on openai is o3-mini (1.10 + 4.40) vs gpt-4o (2.5 + 10)
+    // lowest-cost deep on openai is o3-mini (1.10 + 4.40) vs gpt-4o (2.5 + 10)
     expect(picked.model).toBe("o3-mini");
   });
 
@@ -105,11 +105,11 @@ describe("routing table port", () => {
     expect(defaultModel(PROVIDERS, "claude-sonnet-4-6").model).toBe(
       "claude-sonnet-4-6",
     );
-    // user default's provider missing → cheapest moderate among available
+    // user default's provider missing → lowest-cost moderate among available
     expect(defaultModel(["deepseek"], "claude-sonnet-4-6").model).toBe(
       "deepseek-chat",
     );
-    // no user default → cheapest moderate
+    // no user default → lowest-cost moderate
     expect(defaultModel(["anthropic"]).model).toBe("claude-sonnet-4-6");
   });
 });

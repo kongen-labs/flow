@@ -1,7 +1,7 @@
 /**
  * "Why this model?" popover for the metadata ribbon.
  *
- * Positioning fix (tooltips were rendering at the bottom of the card):
+ * Jul 17 2026 fix (note: "the tooltips are showing on the bottom again"):
  * this surface predated the Explainer portal work and still rendered
  * `absolute top-full` INSIDE the message card — i.e. at the bottom of the
  * card, clipped/overlapped. It now portals to document.body and uses the

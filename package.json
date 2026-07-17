@@ -4,7 +4,7 @@
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
-  "description": "Flow — local-first AI chat. Your keys, your conversations, the model best suited to every prompt. By Kongen Labs.",
+  "description": "Flow unplugged — local-first, BYO-keys chat — no password, no profile. Your conversations stay with you.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

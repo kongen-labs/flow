@@ -298,12 +298,12 @@ describe("AppLock — reset (recovery when the passkey is lost)", () => {
 });
 
 /**
- * Regression tests promoted from a security-review adversarial probe
- * harness (findings F1-F3). The probes documented the
+ * Regression tests promoted from the security review adversarial probe
+ * harness (the adversarial security review, findings F1-F3). The probes documented the
  * vulnerable behaviors; these assert the FIXED contract. Attacker model:
  * write access to localStorage (XSS-adjacent, storage restore, sync).
  */
-describe("regression: security-review findings F1-F3", () => {
+describe("regression: security review findings F1-F3", () => {
   // F2 — silent downgrade prevention
   it("F2 DOWNGRADE: config flipped to 'gate' beside ciphertext -> unlock refuses", async () => {
     const storage = new MemoryStorage();

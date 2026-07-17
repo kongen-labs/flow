@@ -1,24 +1,29 @@
 /**
  * "How does Kongen work" copy — the Kongen-side complement to the audited
- * About-Flow surface.
+ * About-Flow surface (Jul 17 2026).
  *
  * STRICT ASSEMBLY RULE: every sentence here is VERBATIM from an
- * already-approved, claims-audited source (the About-Flow copy, the
- * landing copy, or lib/explain-copy.ts). Do NOT paraphrase, "improve",
- * or add claims here; new claims go through Kongen Labs' claims review.
+ * already-approved source — the claims-audited About-Flow copy
+ * (the canonical copy doc), the landing copy
+ * (the landing copy doc), or lib/explain-copy.ts.
+ * Do NOT paraphrase, "improve", or add claims here; new claims go through
+ * the content team. Each block cites its source.
  *
- * KT PRICING: the "Why a Kongen key." block below carries the canonical
- * approved scoring-cost sentence verbatim (1 KT per Auto score; the
- * pinned path is score-free in send.ts), alongside the free-tier
- * sentence. Terminology guard: "prompts on a pinned model" /
- * "pinned-model prompts", never bare "pinned prompts" outside a sentence
- * that says "pin a model" (pinned-MESSAGE collision; test-pinned).
+ * KT PRICING (omission RESOLVED, Jul 16): the content team issued the
+ * canonical approved scoring-cost sentence (verified vs
+ * logic_endpoint.py: 1 KT per call; pinned path score-free in send.ts) —
+ * used verbatim in the "Why a Kongen key." block below, alongside the
+ * free-tier sentence (the approved block notes "500 free routed prompts"
+ * and "500 KT" are the same fact stated two ways). Terminology guard from
+ * that block: "prompts on a pinned model" / "pinned-model prompts", never
+ * bare "pinned prompts" outside a sentence that says "pin a model"
+ * (pinned-MESSAGE collision; test-pinned).
  *
  * The regimes list renders from REGIME_EXPLAIN (explain-copy.ts) at the
  * component level — single source, no duplication.
  *
  * Pure strings in lib/ so the honesty contract is unit-testable
- * ("best suited" framing, NEVER "cheapest").
+ * ("best suited" framing, NEVER "cheapest" — banned framing).
  */
 
 export const KONGEN_HOW: { lead: string; rest: string }[] = [
@@ -29,7 +34,7 @@ export const KONGEN_HOW: { lead: string; rest: string }[] = [
     rest: "When you send a prompt on Auto, Flow sends that prompt's text to Kongen, which scores how much reasoning it needs. Kongen Routing picks the model for each prompt — powered by Kongen Logic scoring, which reads the prompt's reasoning depth.",
   },
   {
-    // the approved landing copy "How does it work?" (verbatim sentence) +
+    // landing-copy.md "How does it work?" (verbatim sentence) +
     // about-flow HOW_IT_WORKS step 3 (verbatim, minus the step-2 cross
     // reference which doesn't resolve in this section).
     lead: "The score picks the model.",
@@ -42,12 +47,13 @@ export const KONGEN_HOW: { lead: string; rest: string }[] = [
   },
   {
     // explain-copy LABEL_EXPLAIN.kongenKeyRequired (verbatim) + the
-    // canonical approved scoring-cost sentence (verbatim).
+    // canonical approved scoring-cost sentence (verbatim —
+    // the canonical copy doc §A "Approved scoring-cost sentence").
     lead: "Why a Kongen key.",
     rest: "Flow routes every Auto prompt through Kongen's scorer, so a key is required. Free — you start with 500 routed prompts. Each Auto prompt costs 1 Kongen Token (KT) to score — your free routed prompts are those tokens — and prompts on a pinned model cost nothing, because they're never scored.",
   },
   {
-    // the approved landing copy "How does it work?" (verbatim) + explain-copy
+    // landing-copy.md "How does it work?" (verbatim) + explain-copy
     // LABEL_EXPLAIN.kongenRouting last sentence (verbatim).
     lead: "Where the savings come from.",
     rest: "You save money as a consequence — trivial prompts stop hitting frontier pricing. Savings are estimated vs always using the latest frontier model of your providers.",

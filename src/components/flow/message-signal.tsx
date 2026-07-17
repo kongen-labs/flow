@@ -19,7 +19,7 @@ interface MessageSignalProps {
   alwaysLabels?: boolean;
 }
 
-// User-facing labels (Pin / Default / Ignore rename:
+// User-facing labels (Pin / Default / Ignore — rename Jul 16 2026:
 // 'flagged is used to report issues') live in lib/signals.ts so the
 // vocabulary is unit-testable; internal levels stay "critical"/"dismissed"
 // — storage/classifier vocabulary is unchanged. Styling is per-level here.

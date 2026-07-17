@@ -1,10 +1,11 @@
 /**
  * Explainer — shared tap/click "what is this?" pattern for informational
- * labels. Copy lives in lib/explain-copy.ts.
+ * labels (Jul 16 2026). Copy lives in lib/explain-copy.ts.
  *
  * Behavior: wraps any label/chip in a button; tap toggles a small
  * explanation surface: a popover anchored ABOVE the trigger at ALL widths
- * (the old below-md bottom-docked mini-sheet covered the chat input and read
+ * (Jul 17 2026: "open them on top of where the icons are showing" —
+ * the old below-md bottom-docked mini-sheet covered the chat input and read
  * as "tooltips at the bottom"; it is gone). At narrow widths the popover
  * clamps to the viewport width; tall content caps at ~60vh and scrolls
  * internally — it never falls back to a bottom dock. It flips below only
@@ -16,7 +17,10 @@
  *
  * `children` (optional) render actionable controls inside the surface —
  * e.g. the Pin/Default/Ignore signal control — below the one-line body.
- * Clicks inside the surface do not dismiss it.
+ * Clicks inside the surface do not dismiss it. `children` may also be a
+ * function `(close) => ReactNode`, so an action (e.g. the "Add a key"
+ * deep-link) can close the popover before navigating away — otherwise the
+ * body-portaled popover would sit over whatever the action opens.
  *
  * For CONTROLS (mode selector, Full-history chip, chain toggle) the
  * explanation lives in their title/notice instead — wrapping them here
@@ -122,8 +126,11 @@ export function Explainer({
    */
   learnMore?: boolean | string;
   triggerClassName?: string;
-  /** Actionable content (controls) rendered below the body. */
-  children?: ReactNode;
+  /**
+   * Actionable content (controls) rendered below the body. A function form
+   * receives a `close` callback so an action can dismiss the popover.
+   */
+  children?: ReactNode | ((close: () => void) => ReactNode);
 }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -199,7 +206,13 @@ export function Explainer({
                   {body}
                 </span>
               )}
-              {children && <div className="mt-2">{children}</div>}
+              {children && (
+                <div className="mt-2">
+                  {typeof children === "function"
+                    ? children(() => setOpen(false))
+                    : children}
+                </div>
+              )}
               {learnMore && (
                 <span className="mt-1.5 block text-[10px] text-muted-foreground/60">
                   {typeof learnMore === "string" ? (

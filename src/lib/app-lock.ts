@@ -1,6 +1,8 @@
 /**
  * App Lock — biometric lock via WebAuthn platform authenticators
  * (Face ID / Touch ID / Android biometrics / Windows Hello).
+ * Jul 17 2026: "add a smart key lock to the app. Like face
+ * login, or finger print."
  *
  * TWO MODES, feature-detected, honest about themselves:
  *
@@ -22,7 +24,7 @@
  *    encrypted — the settings copy says so explicitly (LOCK_MODE_COPY).
  *    Never imply encryption in gate mode.
  *
- * THREAT MODEL:
+ * THREAT MODEL (for security review review):
  *  - Protects against: casual/opportunistic device access, shoulder-surf
  *    localStorage snooping, key exfiltration from a copied localStorage
  *    (encrypted mode), other people using your unlocked computer profile.
@@ -181,12 +183,12 @@ function randomBytes(n: number): Uint8Array {
  * on the pre-hardening build, then the AAD hardening changed decryption
  * without bumping the format, so his legacy blob failed the GCM tag and
  * the error misattributed it to a passkey mismatch):
- *  - v1 = legacy, NO additionalData (pre-42ebe1d builds). Read-only:
+ *  - v1 = legacy, NO additionalData (legacy builds). Read-only:
  *    decrypted without AAD once, then immediately re-encrypted as v2
  *    (seamless migration on unlock).
  *  - v2 = AAD-bound (configAad) — the only format ever written.
  *
- * SECURITY NOTE: the legacy no-AAD decrypt path is
+ * SECURITY NOTE (for security review): the legacy no-AAD decrypt path is
  * reachable ONLY for v1 blobs, which can only exist from the
  * pre-hardening build. An attacker crafting a v1 blob gains nothing — a
  * valid GCM tag still requires the PRF-derived key; AAD was
@@ -224,7 +226,7 @@ async function deriveWrappingKey(
 
 /**
  * AES-GCM additionalData binding the ciphertext to its lock config
- * (security-review F2 hardening): credentialId + both salts + version are
+ * (security review F2 hardening): credentialId + both salts + version are
  * authenticated, so tampering the (attacker-writable) config blob surfaces
  * as a decrypt failure instead of being silently accepted.
  */
@@ -314,7 +316,7 @@ export class AppLock {
   }
 
   isUnlocked(): boolean {
-    // Fail closed on an inconsistent store (security-review F2): deleting
+    // Fail closed on an inconsistent store (security review F2): deleting
     // the config while ciphertext exists must NOT leave the app "unlocked".
     if (this.integrityIssue()) return false;
     return !this.isEnabled() || this.session !== null;
@@ -322,7 +324,7 @@ export class AppLock {
 
   /**
    * Consistency check between the ciphertext and the (attacker-writable)
-   * config blob (security-review F2: silent-downgrade prevention).
+   * config blob (security review F2: silent-downgrade prevention).
    * Ciphertext presence is authoritative: when it exists, the config MUST
    * say encrypted mode and carry both well-formed 32-byte salts. Any other
    * combination (mode flipped to "gate", config deleted, salts dropped or

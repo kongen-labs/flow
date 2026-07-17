@@ -2,13 +2,13 @@
  * Blocked-characters list for Flow + playground prompt inputs.
  *
  * --------------------------------------------------------------------------
- * Mirrors the hosted API's symbol-normalization map; keep in sync with
- * the API.
+ * MUST STAY IN SYNC WITH BACKEND:
+ *   the Kongen scoring endpoint — `_SYMBOL_NORMALIZATION_MAP`
  * --------------------------------------------------------------------------
  *
- * Why this exists (UX rationale):
+ * Why this exists (UX rationale, May 9 2026):
  *
- * The backend logic-scorer normalizes a fixed set
+ * The backend logic-scorer (PR #6 / `[P1-SCORE-002]`) normalizes a fixed set
  * of Unicode math/logic operators and Greek letters to ASCII keywords before
  * tokenization, so that prompts like "Prove √2 is irrational" do not silently
  * fall through to the trivial regime.

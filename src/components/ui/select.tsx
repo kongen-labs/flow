@@ -1,5 +1,6 @@
 /**
- * ThemedSelect — styled NATIVE <select> (native selects rendered
+ * ThemedSelect — styled NATIVE <select> (Jul 17 2026: "fix the drop
+ * downs on the setting pane to follow UI theme"; native selects rendered
  * OS chrome that ignored the Paper+Red tokens, jarring in dark mode).
  *
  * Kept native (appearance-none + token borders/bg/text + custom chevron)

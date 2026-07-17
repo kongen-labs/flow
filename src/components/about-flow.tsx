@@ -2,17 +2,22 @@
  * "How Flow works" + "What data we save" — the transparency surface for the
  * privacy wedge.
  *
- * COPY IS VERBATIM from Kongen Labs' claims-audited "how it works and
- * data" copy (Pin/Ignore vocabulary revision). Do NOT paraphrase or
+ * COPY IS VERBATIM from the canonical copy doc
+ * (deliverable A, the content team, claims-audited against the code —
+ * Pin/Ignore vocabulary). Do NOT paraphrase or
  * "improve" wording here — every sentence is written to be literally true
- * of the current build; the approved source copy changes first, then is
- * re-ported. Gates cross-checked against lib/context.ts + the renamed UI:
+ * of the current build; edit the doc first, then re-port. Gates
+ * cross-checked Jul 16 2026 against lib/context.ts + the renamed UI:
  * ignored excluded in BOTH scopes incl. the per-prompt full-history chip
  * (test-pinned), auto-suggested pins display identically to manual ones,
  * labels exactly Pin/Ignore(d)/"chain view".
  *
- * TODO: key-mint flow — revisit the "What leaves your device" list when
- * an in-app mint flow ships.
+ * TODO(K1): when the key-mint flow ships, re-add the two [K1] email bullets
+ * from the doc ("Your email → Kongen, once, when you mint your free key.
+ * It's stored with your key account. Invite credits are matched server-side
+ * by referral code.") to the "What leaves your device" list, after
+ * verifying the "stored with your key account" wording against the actual
+ * K1 data model.
  *
  * Rendered from the settings sheet (expandable section) and first-run
  * (trust link at the moment we ask for keys). Mobile-first: plain stacked
@@ -69,7 +74,7 @@ const STAYS_ON_DEVICE: { lead: string; rest: string }[] = [
 // discoverable in v1 (the info toggle on every message opens the Relevance
 // selector with the ghost option), and the exclusion is enforced in
 // lib/context.ts selectContext(). If that UX is ever hidden, cut the
-// sentence.
+// sentence (content review flag 7).
 const LEAVES_DEVICE: { lead: string; rest: string }[] = [
   {
     lead: "The relevant part of your conversation → your model provider.",
@@ -81,8 +86,8 @@ const LEAVES_DEVICE: { lead: string; rest: string }[] = [
     // NOTE: no space before "rest" — the doc's sentence continues the bold
     // lead with a comma.
   },
-  // TODO: key-mint flow — an email bullet goes here once a mint flow
-  // ships (see header comment).
+  // TODO(K1): "[K1] Your email → Kongen, once, ..." bullet goes here once
+  // the mint flow ships (see header comment).
   {
     lead: "Model answers never go to Kongen.",
     rest: "They stream provider → browser. Kongen scores questions; it never sees answers or conversations.",

@@ -12,7 +12,10 @@ import { ChatHeader } from "@/components/chat-header";
 import { ChatView, type ChatMessage } from "@/components/flow/chat-view";
 import { RoutingIndicator } from "@/components/flow/routing-indicator";
 import { FirstRun } from "@/components/first-run";
-import { SettingsDrawer } from "@/components/settings-drawer";
+import {
+  SettingsDrawer,
+  type SettingsView,
+} from "@/components/settings-drawer";
 import { StreamSidebar } from "@/components/stream-sidebar";
 import { FlowDB, type StoredMessage, type StoredStream } from "@/lib/db";
 import { availableProviders, createDefaultKeyStore } from "@/lib/keys";
@@ -67,6 +70,18 @@ export default function App() {
   const [onboarded, setOnboarded] = useState(
     () => localStorage.getItem(ONBOARDED_KEY) === "1",
   );
+  // The wizard OWNS its dismissal (Jul 17 2026: App Lock
+  // reset wiped keys with onboarded=true; committing the Kongen key on
+  // wizard step 1 cleared the gate condition and unmounted FirstRun
+  // mid-flow, skipping the provider step). Once the gate trips, FirstRun
+  // stays mounted until onFinish — never dismissed by a key write.
+  // Initialized from the mount-time gate condition (NOT true) so a load
+  // with everything present never flashes the wizard.
+  const [wizardActive, setWizardActive] = useState(
+    () =>
+      localStorage.getItem(ONBOARDED_KEY) !== "1" ||
+      !createDefaultKeyStore().get("kongen"),
+  );
   const [streams, setStreams] = useState<StoredStream[]>([]);
   const [activeStreamId, setActiveStreamId] = useState<string | null>(null);
   const [messages, setMessages] = useState<StoredMessage[]>([]);
@@ -75,6 +90,14 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Settings navigation is controlled here so deep links work (sidebar
+  // lock icon -> Security sub-view); the gear opens at home.
+  const [settingsView, setSettingsView] = useState<SettingsView>("home");
+  const openSettings = useCallback((view: SettingsView = "home") => {
+    setSettingsView(view);
+    setSettingsOpen(true);
+    setSidebarOpen(false);
+  }, []);
   // Context chain viewer: which assistant message's context is highlighted.
   const [contextChainMessageId, setContextChainMessageId] = useState<
     string | null
@@ -87,7 +110,7 @@ export default function App() {
   const [savedByStream, setSavedByStream] = useState<Record<string, number>>(
     {},
   );
-  // Parallel spent-$ map (the sidebar footer shows the ROI line —
+  // Parallel spent-$ map (Jul 17: sidebar footer shows the ROI line —
   // saved on spent), maintained at the same four update points as saved.
   const [spentByStream, setSpentByStream] = useState<Record<string, number>>(
     {},
@@ -342,10 +365,21 @@ export default function App() {
     [db, keys, activeStreamId, mode, defaultModelId, isStreaming, contextScope, fullHistoryOnce, refreshStreams],
   );
 
-  // Kongen key is REQUIRED: gate first-run on
+  // Kongen key is REQUIRED (Jul 15 2026): gate first-run on
   // it, and re-gate previously onboarded users who don't have one yet.
   // (keysVersion re-renders keep keys.get() fresh after any key change.)
-  if (!onboarded || !keys.get("kongen")) {
+  // `wizardActive` latches the gate: once FirstRun mounts, only its own
+  // onFinish dismisses it — a mid-wizard key commit re-renders App but
+  // must NOT unmount the step flow (see wizardActive above).
+  const gateTripped = !onboarded || !keys.get("kongen");
+  if (gateTripped && !wizardActive) {
+    // Gate re-tripped post-onboarding (e.g. key removed in Settings, App
+    // Lock reset): re-latch so this pass through the wizard also owns its
+    // dismissal. Render-time set (React re-renders immediately, before
+    // painting the stale branch).
+    setWizardActive(true);
+  }
+  if (wizardActive || gateTripped) {
     return (
       <FirstRun
         keys={keys}
@@ -353,6 +387,7 @@ export default function App() {
         onFinish={() => {
           localStorage.setItem(ONBOARDED_KEY, "1");
           setOnboarded(true);
+          setWizardActive(false);
         }}
       />
     );
@@ -377,10 +412,7 @@ export default function App() {
         onNew={newStream}
         onDelete={(id) => void deleteStream(id)}
         onRename={(id, title) => void renameStream(id, title)}
-        onOpenSettings={() => {
-          setSettingsOpen(true);
-          setSidebarOpen(false);
-        }}
+        onOpenSettings={openSettings}
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
@@ -420,6 +452,8 @@ export default function App() {
             contextChainMessageId={contextChainMessageId}
             onToggleContextChain={handleToggleContextChain}
             contextScope={contextScope}
+            hasProviderKeys={availableProviders(keys).length > 0}
+            onAddKey={() => openSettings("keys")}
             fullHistoryOnce={fullHistoryOnce}
             onToggleFullHistoryOnce={() => setFullHistoryOnce((v) => !v)}
             routingIndicator={
@@ -441,6 +475,8 @@ export default function App() {
       <SettingsDrawer
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+        view={settingsView}
+        onNavigate={setSettingsView}
         keys={keys}
         db={db}
         defaultModelId={defaultModelId}

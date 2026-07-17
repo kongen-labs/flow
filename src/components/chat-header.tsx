@@ -1,7 +1,7 @@
 /**
  * Chat header — conversation title (inline rename) + savings chip/popover.
  *
- * Design decisions:
+ * Directives (Jul 16 2026):
  * - rename where the conversation is open, not just the sidebar swipe:
  *   tap/click the title (or pencil) → inline edit, Enter/blur commit,
  *   Esc cancel (same db.updateStream wiring as the sidebar).
@@ -127,7 +127,7 @@ export function ChatHeader({
               : "text-muted-foreground hover:text-foreground hover:bg-muted",
           )}
         >
-          {/* Both figures at a glance: spent + saved est.
+          {/* Both figures at a glance (Jul 17): spent + saved est.
               Labels collapse below sm (375px shows just the two figures —
               the popover carries the full explanation). */}
           <TrendingDown className="h-3.5 w-3.5" />

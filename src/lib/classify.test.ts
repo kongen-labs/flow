@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { classifyMessage } from "./classify-message";
 
 /**
- * Smoke tests for the classifier (mirrors the hosted app's classifier;
- * keep in sync).
+ * Smoke tests for the copied-as-is classifier (source of truth:
+ * apps/kongen-web/lib/classify-message.ts — keep them in sync).
  */
 describe("classifyMessage", () => {
   it("dismisses short filler", () => {

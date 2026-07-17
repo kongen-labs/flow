@@ -1,7 +1,16 @@
 import { useRef, useCallback, useState, useEffect } from "react";
-import { GitBranch, History, Send, ChevronDown, Zap } from "lucide-react";
+import {
+  AlertTriangle,
+  GitBranch,
+  History,
+  Send,
+  ChevronDown,
+  X,
+  Zap,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LABEL_EXPLAIN } from "@/lib/explain-copy";
+import { Explainer } from "../explainer";
 import {
   HELPER_TEXT,
   STRIP_NOTICE,
@@ -26,6 +35,15 @@ interface ChatInputProps {
    */
   fullHistoryOnce?: boolean;
   onToggleFullHistoryOnce?: () => void;
+  /**
+   * Whether at least one provider key is present. When false the mode/model
+   * selector is replaced by the "No provider keys" attention indicator and
+   * the model dropdown is unavailable (Jul 17 2026). Defaults
+   * true so the normal ≥1-key path is untouched.
+   */
+  hasProviderKeys?: boolean;
+  /** Deep-link to Settings → Keys (reuses the App lock-shortcut mechanism). */
+  onAddKey?: () => void;
 }
 
 // Model picker groups, derived from the single routing table in lib/models.ts
@@ -49,6 +67,9 @@ function displayMode(mode: string): string {
 
 const MAX_ROWS = 6;
 
+/** First-use Smart Reference note: shown until dismissed once. */
+const SR_NOTE_DISMISSED_KEY = "flow-local:sr-note:v1";
+
 export function ChatInput({
   onSend,
   disabled,
@@ -56,6 +77,8 @@ export function ChatInput({
   onModeChange,
   fullHistoryOnce,
   onToggleFullHistoryOnce,
+  hasProviderKeys = true,
+  onAddKey,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState("");
@@ -63,6 +86,20 @@ export function ChatInput({
   // Transient flag: set true for ~3s after a strip happens, drives the
   // inline notice render below the textarea.
   const [stripNoticeVisible, setStripNoticeVisible] = useState(false);
+  // Smart Reference first-use note (Jul 17 2026): one quiet,
+  // dismissible element near the chip. Persisted flag — shown until the
+  // user dismisses it once. Copy restates audited step 4 and names both
+  // engagement touchpoints (LABEL_EXPLAIN.smartReferenceFirstUse); no
+  // tour framework, no new deps.
+  const [srNoteVisible, setSrNoteVisible] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.localStorage.getItem(SR_NOTE_DISMISSED_KEY) !== "1",
+  );
+  const dismissSrNote = useCallback(() => {
+    window.localStorage.setItem(SR_NOTE_DISMISSED_KEY, "1");
+    setSrNoteVisible(false);
+  }, []);
 
   // Auto-clear the strip notice after 3s so it doesn't linger.
   useEffect(() => {
@@ -108,6 +145,37 @@ export function ChatInput({
       className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:p-4 md:pb-4"
     >
       <div className="mx-auto max-w-3xl">
+        {/* Smart Reference first-use note — near the chip it explains.
+            Rendered only while the chip exists (Smart Reference active). */}
+        {/* No role="note" on this div: that role is reserved app-wide for
+            the Explainer popovers (portal + geometry tests select on it). */}
+        {srNoteVisible && onToggleFullHistoryOnce && (
+          <div
+            aria-label="Smart Reference"
+            data-testid="sr-first-use-note"
+            className="mb-2 flex items-start gap-2 rounded-lg border bg-card/80 px-3 py-2"
+          >
+            <GitBranch className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {LABEL_EXPLAIN.smartReferenceFirstUse}
+              </p>
+              {/* Learn-more pattern -> About-Flow (step 4 lives there). */}
+              <p className="mt-1 text-[10px] text-muted-foreground/60">
+                More: Settings &rarr; &ldquo;How Flow works &amp; your
+                data&rdquo;.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={dismissSrNote}
+              title="Dismiss"
+              className="flex min-h-[32px] min-w-[32px] shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-muted hover:text-foreground transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
         {/* Floating card */}
         <div
           className={cn(
@@ -172,7 +240,42 @@ export function ChatInput({
           {/* Bottom bar: mode selector + full-history chip + send button */}
           <div className="flex items-center justify-between px-3 pb-2 pt-1">
             <div className="flex min-w-0 items-center gap-1">
-            {/* Mode selector */}
+            {/* No-provider-keys attention state (Jul 17 2026): replaces
+                the mode/model selector entirely — the model dropdown is
+                unavailable until a provider key exists. Warning-toned chip +
+                alert icon (amber per tokens — visible, not screaming), same
+                amber treatment as the armed full-history chip. Tapping opens
+                the shared Explainer: approved provider-keys line + a primary
+                "Add a key" deep-link to Settings → Keys. */}
+            {!hasProviderKeys ? (
+              <Explainer
+                heading={LABEL_EXPLAIN.providerKeysMissing}
+                body={LABEL_EXPLAIN.providerKeys}
+                trigger={
+                  <span
+                    data-testid="no-provider-keys-indicator"
+                    className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium bg-amber-100 text-amber-700 ring-1 ring-amber-400/50 dark:bg-amber-900/40 dark:text-amber-300"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    {LABEL_EXPLAIN.providerKeysMissing}
+                  </span>
+                }
+              >
+                {(close) => (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      close();
+                      onAddKey?.();
+                    }}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-brand/90"
+                  >
+                    {LABEL_EXPLAIN.addProviderKey}
+                  </button>
+                )}
+              </Explainer>
+            ) : (
+            /* Mode selector */
             <div className="relative">
               <button
                 type="button"
@@ -254,9 +357,10 @@ export function ChatInput({
                 </>
               )}
             </div>
+            )}
 
-            {/* Context state chip — indicator + switcher (shows the
-                CURRENT state, not an on/off toggle label). Default
+            {/* Context state chip — indicator + switcher (Jul 16 2026:
+                show the CURRENT state, not an on/off toggle label). Default
                 shows "Smart Reference" with the GitBranch icon — the same
                 icon as the reply chain view it feeds, so the relationship
                 is visible. Tap arms "Full history" for the next send only
@@ -307,15 +411,51 @@ export function ChatInput({
           </div>
         </div>
 
-        {/* Helper text + transient strip notice. Persistent helper is always
-            visible; the notice fires for ~3s when a blocked char is stripped. */}
+        {/* Context-mode status + helper text + transient strip notice.
+            The status line is ALWAYS-ON (Jul 17 2026: "equivalent
+            'Full history will be sent with this prompt' message for smart
+            reference, so it's on all the time"):
+            - Smart Reference default -> quiet muted line (vocabulary
+              matches the first-use note; restates audited step 4; tap
+              opens the chip's explainer). Suppressed while the first-use
+              note is visible so the two never stack saying the same thing
+              — once the note is dismissed, this line is the permanent
+              affordance.
+            - Armed one-send full history -> the existing amber line, tap
+              opens the full-history explainer.
+            - Persistent full-history default (chip absent) -> amber
+              status without the one-send framing, plain (its semantics
+              live in Settings). */}
         <div className="mt-1.5 px-1 text-[11px] text-muted-foreground/70 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          {fullHistoryOnce && (
-            <span
-              role="status"
-              className="font-medium text-amber-600 dark:text-amber-400"
-            >
-              Full history will be sent with this prompt
+          {fullHistoryOnce ? (
+            <Explainer
+              heading="Full history"
+              body={LABEL_EXPLAIN.fullHistoryChip}
+              trigger={
+                <span
+                  role="status"
+                  className="font-medium text-amber-600 dark:text-amber-400"
+                >
+                  Full history will be sent with this prompt
+                </span>
+              }
+            />
+          ) : onToggleFullHistoryOnce ? (
+            !srNoteVisible && (
+              <Explainer
+                heading="Smart Reference"
+                body={LABEL_EXPLAIN.smartReferenceChip}
+                trigger={
+                  <span>
+                    Smart Reference: relevant messages will be sent with this
+                    prompt.
+                  </span>
+                }
+              />
+            )
+          ) : (
+            <span className="font-medium text-amber-600 dark:text-amber-400">
+              Full history will be sent with your prompts.
             </span>
           )}
           <span>{HELPER_TEXT}</span>
