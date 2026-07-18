@@ -31,6 +31,7 @@ import {
   type InstallPlatform,
 } from "@/lib/install";
 import { cn } from "@/lib/utils";
+import { EntryCard } from "./ui/entry-card";
 
 const OPEN_EVENT = "flow-local:install:open";
 
@@ -218,16 +219,20 @@ export function InstallHost() {
   );
 }
 
-/** Quiet inline trigger (wizard welcome step). Hidden when installed. */
-export function InstallLink() {
+/**
+ * Install entry point as a proper tappable card (wizard welcome step) —
+ * the settings-v3 row pattern, not a bare link. Hidden when already
+ * installed. Copy is navigational only (consistent with the sheet's
+ * approved "iPhone, Mac, and Windows" framing).
+ */
+export function InstallCard() {
   if (isStandalone()) return null;
   return (
-    <button
-      type="button"
+    <EntryCard
+      icon={MonitorDown}
+      title="Install Flow as an app"
+      subtitle="Add it to your home screen or dock — iPhone, Mac, Windows."
       onClick={() => void openInstall()}
-      className="min-h-[32px] text-xs text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors"
-    >
-      Install Flow as an app &rarr;
-    </button>
+    />
   );
 }

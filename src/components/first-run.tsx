@@ -35,7 +35,13 @@
  */
 
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ExternalLink,
+  ShieldCheck,
+} from "lucide-react";
 import { availableProviders, type KeyStore } from "@/lib/keys";
 import { LABEL_EXPLAIN } from "@/lib/explain-copy";
 import { PROVIDER_LABELS, PROVIDERS, type Provider } from "@/lib/models";
@@ -46,7 +52,8 @@ import {
 } from "@/lib/source-link";
 import { cn } from "@/lib/utils";
 import { AboutFlowContent } from "./about-flow";
-import { InstallLink } from "./install-sheet";
+import { InstallCard } from "./install-sheet";
+import { EntryCard } from "./ui/entry-card";
 import {
   KONGEN_SIGNUP_URL,
   KeyRow,
@@ -174,27 +181,32 @@ export function FirstRun({
                 <ArrowRight className="h-4 w-4" />
               </PrimaryButton>
 
-              {/* Quiet trust footer — present, not crowding. */}
-              <div className="space-y-2 text-center">
+              {/* Quiet trust footer — proper tappable cards (settings-v3
+                  row pattern), not bare links. */}
+              <div className="space-y-2 text-left">
                 {/* Install affordance (hidden when already installed). */}
-                <InstallLink />
-                <button
-                  type="button"
+                <InstallCard />
+                <EntryCard
+                  icon={ShieldCheck}
+                  title="How Flow works & what data we save"
+                  subtitle="A quick tour, and exactly what stays on your device."
                   onClick={() => setAboutOpen((o) => !o)}
-                  aria-expanded={aboutOpen}
-                  className="min-h-[32px] text-xs text-muted-foreground underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors"
-                >
-                  {aboutOpen
-                    ? "Hide: how Flow works & what data we save"
-                    : "How Flow works & what data we save →"}
-                </button>
+                  expanded={aboutOpen}
+                />
                 {aboutOpen && (
-                  <div className="rounded-lg border bg-background/40 p-3 text-left">
+                  // Slim, self-contained disclosure — the "what data we save"
+                  // copy is long (audited/verbatim), so bound it to a
+                  // scrollable panel instead of letting it consume the whole
+                  // screen and push the primary action off-view (Jul 17
+                  // 2026: "make the consent box thinner… on mobile it covers
+                  // the entire screen almost"). Container reflow only — copy
+                  // unchanged.
+                  <div className="max-h-[40vh] overflow-y-auto overscroll-contain rounded-lg border bg-background/40 p-3 text-left">
                     <AboutFlowContent />
                   </div>
                 )}
                 {/* Softened approved claim only — see lib/source-link.ts. */}
-                <p className="text-xs leading-relaxed text-muted-foreground/60">
+                <p className="pt-1 text-center text-xs leading-relaxed text-muted-foreground/60">
                   {SOURCE_PUBLIC_PREFIX}{" "}
                   <a
                     href={SOURCE_REPO_URL}

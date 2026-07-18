@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChatHeader } from "@/components/chat-header";
 import { ChatView, type ChatMessage } from "@/components/flow/chat-view";
+import { OfflineBanner } from "@/components/flow/offline-banner";
 import { RoutingIndicator } from "@/components/flow/routing-indicator";
 import { FirstRun } from "@/components/first-run";
 import {
@@ -19,7 +20,8 @@ import {
 import { StreamSidebar } from "@/components/stream-sidebar";
 import { FlowDB, type StoredMessage, type StoredStream } from "@/lib/db";
 import { availableProviders, createDefaultKeyStore } from "@/lib/keys";
-import { flagshipFor, formatModelName } from "@/lib/models";
+import { flagshipFor, formatModelName, refreshCatalog } from "@/lib/models";
+import { useCatalog } from "@/lib/use-catalog";
 import {
   messageSavedUsd,
   savedByStream as aggregateSavedByStream,
@@ -30,6 +32,7 @@ import type { ContextScope } from "@/lib/context";
 import { sendMessageWith, type RoutingDecision } from "@/lib/send";
 import type { SignalLevel } from "@/lib/classify-message";
 import { applySignal } from "@/lib/signals";
+import { useOnline } from "@/lib/use-online";
 import { localId } from "@/lib/utils";
 
 const ONBOARDED_KEY = "flow-local:onboarded:v1";
@@ -62,6 +65,20 @@ function toChatMessage(m: StoredMessage): ChatMessage {
 }
 
 export default function App() {
+  // Connectivity — drives the offline banner + send gating. Read-only paths
+  // (history, chain view, savings, export, settings) never consult it.
+  const online = useOnline();
+  // Subscribe to the live model catalog so the flagship baseline label (and
+  // anything else derived from it) re-renders when a newer server catalog is
+  // adopted. The catalog itself is cache/seed-backed, so this never gates the
+  // offline read path.
+  useCatalog();
+  // Revalidate the central model catalog from /v1/models when online (on load
+  // and on reconnect). Failures are swallowed inside refreshCatalog and leave
+  // the cached/seed catalog in place — the picker is never blank offline.
+  useEffect(() => {
+    if (online) void refreshCatalog();
+  }, [online]);
   const keys = useMemo(() => createDefaultKeyStore(), []);
   const [, setKeysVersion] = useState(0);
   const bumpKeys = useCallback(() => setKeysVersion((v) => v + 1), []);
@@ -274,7 +291,11 @@ export default function App() {
 
   const handleSend = useCallback(
     async (text: string) => {
-      if (!db || isStreaming) return;
+      // Offline is a hard gate: the provider stream + Auto scoring both need
+      // the network. The composer keeps the draft (ChatInput blocks the send
+      // before clearing), so this is belt-and-suspenders — never a silent
+      // failure and never lost text.
+      if (!db || isStreaming || !online) return;
       setError(null);
       setIsStreaming(true);
       draftRef.current = "";
@@ -362,7 +383,7 @@ export default function App() {
 
       setIsStreaming(false);
     },
-    [db, keys, activeStreamId, mode, defaultModelId, isStreaming, contextScope, fullHistoryOnce, refreshStreams],
+    [db, keys, activeStreamId, mode, defaultModelId, isStreaming, online, contextScope, fullHistoryOnce, refreshStreams],
   );
 
   // Kongen key is REQUIRED (Jul 15 2026): gate first-run on
@@ -431,6 +452,10 @@ export default function App() {
           })()}
         />
 
+        {/* Offline indicator — persistent while the device is offline. Read
+            surfaces stay fully live; only sending is gated (see composer). */}
+        {!online && <OfflineBanner />}
+
         {/* Error banner */}
         {error && (
           <div className="mx-auto mt-2 w-full max-w-3xl px-4">
@@ -446,6 +471,7 @@ export default function App() {
             messages={chatMessages}
             onSend={(text) => void handleSend(text)}
             isStreaming={isStreaming}
+            offline={!online}
             mode={mode}
             onModeChange={handleModeChange}
             onSignalChange={handleSignalChange}

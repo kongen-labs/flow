@@ -1,14 +1,16 @@
-import { useRef, useCallback, useState, useEffect } from "react";
+import { useRef, useCallback, useState, useEffect, useMemo } from "react";
 import {
   AlertTriangle,
   GitBranch,
   History,
   Send,
   ChevronDown,
+  WifiOff,
   X,
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OFFLINE_SEND_MESSAGE } from "@/lib/offline";
 import { LABEL_EXPLAIN } from "@/lib/explain-copy";
 import { Explainer } from "../explainer";
 import {
@@ -16,16 +18,19 @@ import {
   STRIP_NOTICE,
   stripBlockedChars,
 } from "@/lib/blocked-chars";
-import {
-  formatModelName,
-  PROVIDER_LABELS,
-  PROVIDER_MODELS,
-  PROVIDERS,
-} from "@/lib/models";
+import { formatModelName } from "@/lib/models";
+import { useCatalog } from "@/lib/use-catalog";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  /**
+   * Device is offline. Sending (provider stream + Auto scoring) needs the
+   * network, so the send button is disabled with a precise reason — but the
+   * textarea stays live so a draft can be composed offline, and the drafted
+   * text is never cleared by a blocked send (Jul 17 2026).
+   */
+  offline?: boolean;
   mode?: string;
   onModeChange?: (mode: string) => void;
   /**
@@ -46,20 +51,6 @@ interface ChatInputProps {
   onAddKey?: () => void;
 }
 
-// Model picker groups, derived from the single routing table in lib/models.ts
-// so the picker can never drift from what the router actually supports.
-const MODEL_GROUPS: {
-  provider: string;
-  models: { id: string; label: string; regimes: string }[];
-}[] = PROVIDERS.map((provider) => ({
-  provider: PROVIDER_LABELS[provider],
-  models: PROVIDER_MODELS[provider].map((spec) => ({
-    id: spec.name,
-    label: formatModelName(spec.name),
-    regimes: spec.regimes.join(" · "),
-  })),
-}));
-
 // Friendly display for the selected mode
 function displayMode(mode: string): string {
   return mode === "Auto" ? "Auto" : formatModelName(mode);
@@ -73,6 +64,7 @@ const SR_NOTE_DISMISSED_KEY = "flow-local:sr-note:v1";
 export function ChatInput({
   onSend,
   disabled,
+  offline = false,
   mode = "Auto",
   onModeChange,
   fullHistoryOnce,
@@ -83,6 +75,28 @@ export function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState("");
   const [modeOpen, setModeOpen] = useState(false);
+
+  // Picker groups derived from the LIVE catalog (lib/models.ts): server-fetched
+  // with a bundled seed fallback. Built in render (via useCatalog) so a model
+  // added on the server appears here with no code change; only `selectable`
+  // models are offered for pinning.
+  const catalog = useCatalog();
+  const modelGroups = useMemo(
+    () =>
+      catalog.providers
+        .map((p) => ({
+          provider: p.label,
+          models: p.models
+            .filter((spec) => spec.selectable !== false)
+            .map((spec) => ({
+              id: spec.name,
+              label: spec.label ?? formatModelName(spec.name),
+              regimes: spec.regimes.join(" · "),
+            })),
+        }))
+        .filter((group) => group.models.length > 0),
+    [catalog],
+  );
   // Transient flag: set true for ~3s after a strip happens, drives the
   // inline notice render below the textarea.
   const [stripNoticeVisible, setStripNoticeVisible] = useState(false);
@@ -121,13 +135,15 @@ export function ChatInput({
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
-    if (!trimmed || disabled) return;
+    // Offline blocks the send BEFORE clearing — the draft is preserved so the
+    // user can send it on reconnect (never a silent failure, never lost text).
+    if (!trimmed || disabled || offline) return;
     onSend(trimmed);
     setValue("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [value, disabled, onSend]);
+  }, [value, disabled, offline, onSend]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -325,7 +341,7 @@ export function ChatInput({
 
                     {/* Model groups */}
                     <div className="max-h-64 overflow-y-auto py-1">
-                      {MODEL_GROUPS.map((group) => (
+                      {modelGroups.map((group) => (
                         <div key={group.provider}>
                           <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                             {group.provider}
@@ -394,14 +410,19 @@ export function ChatInput({
             )}
             </div>
 
-            {/* Send button */}
+            {/* Send button — disabled offline (sending needs the network);
+                the reason is stated in the status line below. */}
             <button
               onClick={handleSend}
-              disabled={isEmpty || disabled}
-              title="Send message (Enter)"
+              disabled={isEmpty || disabled || offline}
+              title={
+                offline
+                  ? OFFLINE_SEND_MESSAGE
+                  : "Send message (Enter)"
+              }
               className={cn(
                 "rounded-lg p-2.5 md:p-2 transition-colors",
-                !isEmpty && !disabled
+                !isEmpty && !disabled && !offline
                   ? "bg-brand hover:bg-brand/90 text-white"
                   : "text-muted-foreground/30 cursor-not-allowed",
               )}
@@ -427,6 +448,21 @@ export function ChatInput({
               status without the one-send framing, plain (its semantics
               live in Settings). */}
         <div className="mt-1.5 px-1 text-[11px] text-muted-foreground/70 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          {offline ? (
+            // One message while offline: the precise send-disabled reason,
+            // stated once. The context/helper lines are suppressed so the
+            // boundary is unambiguous (impeccable.style: one clear message).
+            <span
+              role="status"
+              aria-live="polite"
+              data-testid="offline-send-reason"
+              className="flex items-center gap-1.5 font-medium text-amber-600 dark:text-amber-400"
+            >
+              <WifiOff className="h-3 w-3 shrink-0" />
+              {OFFLINE_SEND_MESSAGE}
+            </span>
+          ) : (
+            <>
           {fullHistoryOnce ? (
             <Explainer
               heading="Full history"
@@ -467,6 +503,8 @@ export function ChatInput({
             >
               · {STRIP_NOTICE}
             </span>
+          )}
+            </>
           )}
         </div>
       </div>

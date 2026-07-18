@@ -29,7 +29,6 @@ import { useRef, useState, type ComponentType, type ReactNode } from "react";
 import {
   ArrowLeft,
   ChevronDown,
-  ChevronRight,
   Database,
   Download,
   Info,
@@ -51,6 +50,7 @@ import { AboutKongenContent } from "./about-kongen";
 import { AppLockSettings } from "./app-lock-settings";
 import { useAppLock } from "./app-lock-gate";
 import { openInstall } from "./install-sheet";
+import { EntryCard } from "./ui/entry-card";
 import { ThemedSelect } from "./ui/select";
 import type { FlowDB, FlowExport } from "@/lib/db";
 import type { KeyStore } from "@/lib/keys";
@@ -63,9 +63,10 @@ import {
 } from "@/lib/source-link";
 import {
   PROVIDER_LABELS,
-  PROVIDER_MODELS,
   formatModelName,
+  modelsForProvider,
 } from "@/lib/models";
+import { useCatalog } from "@/lib/use-catalog";
 import type { ContextScope } from "@/lib/context";
 import { formatSavedUsd } from "@/lib/savings";
 import { getThemePref, setTheme, type ThemePref } from "@/lib/theme";
@@ -91,9 +92,13 @@ const THEME_LABELS: Record<ThemePref, string> = {
   system: "System",
 };
 
-/** Home-menu row: icon · title · one-line status summary · chevron. */
+/**
+ * Home-menu row: icon · title · one-line status summary · chevron. Shares
+ * the EntryCard pattern with the onboarding wizard (single-line summary
+ * here for the compact menu); `title`/`summary` names kept for callers.
+ */
 function MenuRow({
-  icon: Icon,
+  icon,
   title,
   summary,
   onClick,
@@ -104,23 +109,13 @@ function MenuRow({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <EntryCard
+      icon={icon}
+      title={title}
+      subtitle={summary}
       onClick={onClick}
-      className={cn(
-        "flex min-h-[56px] w-full items-center gap-3 rounded-lg border px-3 py-2 text-left",
-        "hover:bg-muted transition-colors",
-      )}
-    >
-      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="block truncate text-xs text-muted-foreground">
-          {summary}
-        </span>
-      </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-    </button>
+      subtitleLines={1}
+    />
   );
 }
 
@@ -187,7 +182,12 @@ function ExpandableInfo({
         />
       </button>
       {open && (
-        <div className="rounded-lg border bg-background/40 p-3">{children}</div>
+        // Bound long disclosures (e.g. the "what data we save" copy) to a
+        // slim scrollable panel so an expanded notice never consumes the
+        // viewport on mobile (Jul 17 2026). Container reflow only.
+        <div className="max-h-[50vh] overflow-y-auto overscroll-contain rounded-lg border bg-background/40 p-3">
+          {children}
+        </div>
       )}
     </div>
   );
@@ -233,6 +233,9 @@ export function SettingsDrawer({
   const dragStartY = useRef<number | null>(null);
   const [dragY, setDragY] = useState(0);
   const providers = availableProviders(keys);
+  // Live catalog subscription: the default-model list re-renders when a newer
+  // server catalog is adopted (server-added models appear with no code change).
+  useCatalog();
   const appLock = useAppLock();
 
   if (!open) return null;
@@ -446,11 +449,13 @@ export function SettingsDrawer({
                 >
                   <option value="">Balanced default (auto)</option>
                   {providers.flatMap((provider) =>
-                    PROVIDER_MODELS[provider].map((spec) => (
-                      <option key={spec.name} value={spec.name}>
-                        {provider} / {formatModelName(spec.name)}
-                      </option>
-                    )),
+                    modelsForProvider(provider)
+                      .filter((spec) => spec.selectable !== false)
+                      .map((spec) => (
+                        <option key={spec.name} value={spec.name}>
+                          {provider} / {formatModelName(spec.name)}
+                        </option>
+                      )),
                   )}
                 </ThemedSelect>
               </div>

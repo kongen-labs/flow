@@ -6,37 +6,13 @@ import {
   REGIME_EXPLAIN,
   SIGNAL_MEANING,
 } from "@/lib/explain-copy";
-import type { Regime } from "@/lib/models";
+import { formatModelName, type Regime } from "@/lib/models";
+import { useCatalog } from "@/lib/use-catalog";
 import { compareToFrontier, formatCostUsd } from "@/lib/cost-compare";
 import { availableProviders, createDefaultKeyStore } from "@/lib/keys";
 import { Explainer } from "../explainer";
 import { ModelTooltip } from "./model-tooltip";
 import { MessageSignal, type SignalLevel } from "./message-signal";
-
-const MODEL_DISPLAY: Record<string, string> = {
-  "claude-haiku-4-5-20251001": "Haiku",
-  "claude-sonnet-4-6": "Sonnet",
-  "claude-opus-4-6": "Opus",
-  "gpt-4o-mini": "GPT-4o Mini",
-  "gpt-4o": "GPT-4o",
-  "gpt-4.1": "GPT-4.1",
-  "o3-mini": "o3 Mini",
-  "o3": "o3",
-  "gemini-2.0-flash-lite": "Flash Lite",
-  "gemini-2.0-flash": "Flash",
-  "gemini-2.5-flash": "Gemini Flash",
-  "gemini-2.5-pro": "Gemini Pro",
-  "mistral-small-latest": "Mistral Small",
-  "mistral-medium-latest": "Mistral Medium",
-  "mistral-large-latest": "Mistral Large",
-  "codestral-latest": "Codestral",
-  "deepseek-chat": "DeepSeek",
-  "deepseek-reasoner": "DeepSeek R1",
-};
-
-function formatModelName(model: string): string {
-  return MODEL_DISPLAY[model] || model;
-}
 
 interface MetadataRibbonProps {
   model: string;
@@ -98,6 +74,9 @@ export function MetadataRibbon({
   const [showTooltip, setShowTooltip] = useState(false);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Subscribe so model display names track the live catalog (a server-added
+  // model's label renders here without a code change).
+  useCatalog();
 
   // Paid-vs-frontier comparison for the cost popover (Jul 16 2026 —
   // comparison, not definition). Providers read once per ribbon mount; a

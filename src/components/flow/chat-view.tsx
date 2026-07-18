@@ -18,6 +18,8 @@ interface ChatViewProps {
   messages: ChatMessage[];
   onSend: (message: string) => void;
   isStreaming?: boolean;
+  /** Device is offline — composing stays live, but sending is gated. */
+  offline?: boolean;
   mode?: string;
   onModeChange?: (mode: string) => void;
   onSignalChange?: (messageId: string, signal: "critical" | "default" | "dismissed") => void;
@@ -41,6 +43,7 @@ export function ChatView({
   messages,
   onSend,
   isStreaming,
+  offline,
   mode,
   onModeChange,
   onSignalChange,
@@ -222,6 +225,7 @@ export function ChatView({
       <ChatInput
         onSend={onSend}
         disabled={isStreaming}
+        offline={offline}
         mode={mode}
         onModeChange={onModeChange}
         hasProviderKeys={hasProviderKeys}
