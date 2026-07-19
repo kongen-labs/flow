@@ -6,9 +6,12 @@ import { AppLockGate } from "./components/app-lock-gate";
 import { InstallHost } from "./components/install-sheet";
 import { initInstallPromptCapture } from "./lib/install";
 import { initTheme } from "./lib/theme";
+import { initTextScale } from "./lib/text-scale";
 
 // Apply persisted (or system) theme before first paint to avoid a flash.
 initTheme();
+// Apply the persisted text/icon size (root font-size rem cascade) pre-paint.
+initTextScale();
 
 // Capture beforeinstallprompt at boot — it fires once, early; without
 // this, the in-app "Install Flow" button could never trigger it.

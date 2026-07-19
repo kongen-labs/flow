@@ -117,10 +117,13 @@ export function formatSavedUsd(n: number): string {
 
 /**
  * Compact ROI line for the sidebar footer (Jul 17 2026):
- * "$1.70 saved on $0.42 spent (80% less)". The percentage is
+ * "$1.70 saved on $0.42 spent (80% less, est.)". The percentage is
  * saved / (saved + spent) — i.e. how much less was paid than the frontier
- * baseline (baseline = spent + saved), same identity as sumSavings.
- * Null when either figure is missing — never renders a hollow claim.
+ * baseline (baseline = spent + saved), same identity as sumSavings. The
+ * inline "est." qualifier is belt-and-suspenders consistent with the other
+ * percentage surfaces ("Saved (est.)", the ↓% savings badge), since savings
+ * are an estimated outcome. Null when either figure is missing — never
+ * renders a hollow claim.
  */
 export function formatRoiLine(
   savedUsd: number,
@@ -128,5 +131,5 @@ export function formatRoiLine(
 ): string | null {
   if (!(savedUsd > 0) || !(spentUsd > 0)) return null;
   const pct = Math.round((savedUsd / (savedUsd + spentUsd)) * 100);
-  return `${formatSavedUsd(savedUsd)} saved on ${formatSavedUsd(spentUsd)} spent (${pct}% less)`;
+  return `${formatSavedUsd(savedUsd)} saved on ${formatSavedUsd(spentUsd)} spent (${pct}% less, est.)`;
 }

@@ -56,14 +56,18 @@ function systemPrefersDark(): boolean {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-/** Apply a preference to the document: `.dark` class + theme-color meta. */
+/** Apply a preference to the document: `.dark` class + theme-color metas. */
 export function applyTheme(pref: ThemePref): void {
   const dark = resolveTheme(pref, systemPrefersDark()) === "dark";
   document.documentElement.classList.toggle("dark", dark);
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) {
-    meta.setAttribute("content", dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT);
-  }
+  // index.html ships two media-scoped theme-color metas (light/dark) that iOS
+  // reads at launch; rewrite BOTH to the resolved color so an explicit
+  // preference (e.g. light while the system is dark) still wins over the
+  // media query. Keeps the installed-PWA status-bar strip matching the app.
+  const color = dark ? THEME_COLOR_DARK : THEME_COLOR_LIGHT;
+  document
+    .querySelectorAll('meta[name="theme-color"]')
+    .forEach((meta) => meta.setAttribute("content", color));
 }
 
 /** Persist + apply. */

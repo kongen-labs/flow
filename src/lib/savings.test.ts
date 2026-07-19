@@ -25,13 +25,17 @@ describe("spentByStream", () => {
 });
 
 describe("formatRoiLine", () => {
-  it("formats saved-on-spent with pct of the frontier baseline", () => {
+  it("formats saved-on-spent with pct of the frontier baseline, est.-qualified", () => {
     // baseline = 1.70 + 0.42 = 2.12 → 1.70/2.12 ≈ 80%
-    expect(formatRoiLine(1.7, 0.42)).toBe("$1.70 saved on $0.42 spent (80% less)");
+    expect(formatRoiLine(1.7, 0.42)).toBe(
+      "$1.70 saved on $0.42 spent (80% less, est.)",
+    );
   });
 
   it("uses dust formatting for sub-cent figures", () => {
-    expect(formatRoiLine(0.005, 0.005)).toBe("<$0.01 saved on <$0.01 spent (50% less)");
+    expect(formatRoiLine(0.005, 0.005)).toBe(
+      "<$0.01 saved on <$0.01 spent (50% less, est.)",
+    );
   });
 
   it("returns null when either figure is missing — no hollow claims", () => {

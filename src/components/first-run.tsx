@@ -50,6 +50,14 @@ import {
   SOURCE_REPO_LABEL,
   SOURCE_REPO_URL,
 } from "@/lib/source-link";
+import {
+  ASSENT_CONJUNCTION,
+  ASSENT_PREFIX,
+  ASSENT_PRIVACY_LABEL,
+  ASSENT_TERMS_LABEL,
+  PRIVACY_URL,
+  TERMS_URL,
+} from "@/lib/legal-copy";
 import { cn } from "@/lib/utils";
 import { AboutFlowContent } from "./about-flow";
 import { InstallCard } from "./install-sheet";
@@ -87,6 +95,33 @@ function PrimaryButton({
     >
       {children}
     </button>
+  );
+}
+
+/** Quiet first-run assent — verbatim sentence (lib/legal-copy.ts) with
+ *  Terms + Privacy as inline new-tab links. */
+function AssentLine() {
+  return (
+    <p className="pt-1 text-center text-xs leading-relaxed text-muted-foreground/60">
+      {ASSENT_PREFIX}
+      <a
+        href={TERMS_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="underline text-brand-fg"
+      >
+        {ASSENT_TERMS_LABEL}
+      </a>
+      {ASSENT_CONJUNCTION}
+      <a
+        href={PRIVACY_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="underline text-brand-fg"
+      >
+        {ASSENT_PRIVACY_LABEL}
+      </a>
+    </p>
   );
 }
 
@@ -217,6 +252,8 @@ export function FirstRun({
                     {SOURCE_REPO_LABEL}
                   </a>
                 </p>
+                {/* Quiet assent — "Get started" is the continue action. */}
+                <AssentLine />
               </div>
             </div>
           </>

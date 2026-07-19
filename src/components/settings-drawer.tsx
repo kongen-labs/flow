@@ -31,12 +31,14 @@ import {
   ChevronDown,
   Database,
   Download,
+  ExternalLink,
   Info,
   KeyRound,
   Monitor,
   MonitorDown,
   Moon,
   Palette,
+  Scale,
   ShieldCheck,
   Sun,
   Upload,
@@ -62,6 +64,22 @@ import {
   SOURCE_REPO_URL,
 } from "@/lib/source-link";
 import {
+  ABOUT_KONGEN_HEADING,
+  ACCEPTABLE_USE_URL,
+  KONGEN_COMPANY_LABEL,
+  KONGEN_COMPANY_URL,
+  KONGEN_KEY_CTA_LABEL,
+  LEGAL_MENU_SUMMARY,
+  LEGAL_MENU_TITLE,
+  LINK_ACCEPTABLE_USE_LABEL,
+  LINK_PRIVACY_LABEL,
+  LINK_TERMS_LABEL,
+  ON_DEVICE_DISCLOSURE,
+  PRIVACY_URL,
+  TERMS_URL,
+} from "@/lib/legal-copy";
+import { APP_VERSION_LINE } from "@/lib/build-info";
+import {
   PROVIDER_LABELS,
   formatModelName,
   modelsForProvider,
@@ -70,7 +88,13 @@ import { useCatalog } from "@/lib/use-catalog";
 import type { ContextScope } from "@/lib/context";
 import { formatSavedUsd } from "@/lib/savings";
 import { getThemePref, setTheme, type ThemePref } from "@/lib/theme";
-import { KeySetup } from "./key-setup";
+import {
+  getTextScale,
+  setTextScale,
+  TEXT_SCALE_LABELS,
+  type TextScale,
+} from "@/lib/text-scale";
+import { KeySetup, KONGEN_SIGNUP_URL } from "./key-setup";
 
 export type SettingsView =
   | "home"
@@ -78,7 +102,8 @@ export type SettingsView =
   | "routing"
   | "appearance"
   | "security"
-  | "data";
+  | "data"
+  | "legal";
 
 const THEME_OPTIONS: { value: ThemePref; label: string; icon: typeof Sun }[] = [
   { value: "light", label: "Light", icon: Sun },
@@ -91,6 +116,14 @@ const THEME_LABELS: Record<ThemePref, string> = {
   dark: "Dark",
   system: "System",
 };
+
+const TEXT_SCALE_OPTIONS: { value: TextScale; label: string; className: string }[] =
+  [
+    // Each button previews its own size (A gets bigger left→right).
+    { value: "small", label: "Small", className: "text-xs" },
+    { value: "default", label: "Default", className: "text-sm" },
+    { value: "large", label: "Large", className: "text-base" },
+  ];
 
 /**
  * Home-menu row: icon · title · one-line status summary · chevron. Shares
@@ -144,6 +177,24 @@ function SubView({
       </div>
       {children}
     </div>
+  );
+}
+
+/** External link row (Legal & About): label + new-tab affordance. */
+function LegalLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className={cn(
+        "flex min-h-[44px] items-center justify-between rounded-lg border px-3 py-2.5 md:min-h-0 md:py-2",
+        "text-sm font-medium hover:bg-muted transition-colors md:text-xs",
+      )}
+    >
+      <span>{label}</span>
+      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+    </a>
   );
 }
 
@@ -227,6 +278,9 @@ export function SettingsDrawer({
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [themePref, setThemePref] = useState<ThemePref>(() => getThemePref());
+  const [textScale, setTextScaleState] = useState<TextScale>(() =>
+    getTextScale(),
+  );
   const [aboutOpen, setAboutOpen] = useState(false);
   const [kongenOpen, setKongenOpen] = useState(false);
   // Swipe-down-to-dismiss (mobile bottom sheet only).
@@ -251,7 +305,7 @@ export function SettingsDrawer({
   const routingSummary = `${
     defaultModelId ? formatModelName(defaultModelId) : "Auto"
   } · ${contextScope === "relevant" ? "Smart Reference" : "Full history"}`;
-  const appearanceSummary = THEME_LABELS[themePref];
+  const appearanceSummary = `${THEME_LABELS[themePref]} · ${TEXT_SCALE_LABELS[textScale]} text`;
   const securitySummary = !appLock?.supported
     ? "App Lock unavailable"
     : appLock.enabled
@@ -262,7 +316,7 @@ export function SettingsDrawer({
   const dataSummary =
     lifetimeSavedUsd > 0
       ? `est. ${formatSavedUsd(lifetimeSavedUsd)} saved · export & import`
-      : "Export & import · about Flow";
+      : "Export & import your conversations";
 
   async function handleExport() {
     if (!db) return;
@@ -301,6 +355,11 @@ export function SettingsDrawer({
   function handleThemeChange(pref: ThemePref) {
     setTheme(pref);
     setThemePref(pref);
+  }
+
+  function handleTextScaleChange(scale: TextScale) {
+    setTextScale(scale);
+    setTextScaleState(scale);
   }
 
   return (
@@ -395,6 +454,14 @@ export function SettingsDrawer({
                 }
                 onClick={() => void openInstall()}
               />
+              {/* Legal & About — last row: terms, privacy, and where to
+                  find Kongen (was previously buried behind "Your Data"). */}
+              <MenuRow
+                icon={Scale}
+                title={LEGAL_MENU_TITLE}
+                summary={LEGAL_MENU_SUMMARY}
+                onClick={() => onNavigate("legal")}
+              />
             </div>
           )}
 
@@ -408,24 +475,57 @@ export function SettingsDrawer({
           {/* ---- Appearance ---- */}
           {view === "appearance" && (
             <SubView title="Appearance" onBack={() => onNavigate("home")}>
-              <div className="flex gap-1 rounded-lg border p-1">
-                {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => handleThemeChange(value)}
-                    className={cn(
-                      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2.5 md:py-1.5 text-sm font-medium transition-colors md:text-xs",
-                      themePref === value
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                    aria-pressed={themePref === value}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium md:text-xs">Theme</h4>
+                <div className="flex gap-1 rounded-lg border p-1">
+                  {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => handleThemeChange(value)}
+                      className={cn(
+                        "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2.5 md:py-1.5 text-sm font-medium transition-colors md:text-xs",
+                        themePref === value
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      aria-pressed={themePref === value}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Text & icon size — scales the whole UI (rem cascade on the
+                  document root); persisted in localStorage (lib/text-scale). */}
+              <div className="space-y-2 border-t pt-4">
+                <h4 className="text-sm font-medium md:text-xs">
+                  Text &amp; icon size
+                </h4>
+                <p className="text-[13px] text-muted-foreground md:text-xs">
+                  Scales text and icons across the whole app.
+                </p>
+                <div className="flex gap-1 rounded-lg border p-1">
+                  {TEXT_SCALE_OPTIONS.map(({ value, label, className }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => handleTextScaleChange(value)}
+                      aria-pressed={textScale === value}
+                      className={cn(
+                        "flex flex-1 items-center justify-center rounded-md px-2 py-2.5 font-medium transition-colors md:py-1.5",
+                        className,
+                        textScale === value
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </SubView>
           )}
@@ -564,28 +664,49 @@ export function SettingsDrawer({
                   {status}
                 </p>
               )}
+              {/* The How-Flow-works / How-Kongen-works / public-source trust
+                  cluster now lives in Legal & About (one predictable place,
+                  per "settings too long"). */}
+            </SubView>
+          )}
 
-              {/* Trust cluster — last but visible, not buried. About-Flow
-                  is verbatim, claims-audited copy (about-flow.tsx). */}
+          {/* ---- Legal & About: disclosure, legal links, Kongen, OSS,
+              the verbatim About expandables, and a quiet version footer ---- */}
+          {view === "legal" && (
+            <SubView title={LEGAL_MENU_TITLE} onBack={() => onNavigate("home")}>
+              {/* (1) On-device disclosure — verbatim (lib/legal-copy.ts). */}
+              <p className="text-[13px] leading-relaxed text-muted-foreground md:text-xs">
+                {ON_DEVICE_DISCLOSURE}
+              </p>
+
+              {/* (2) Legal documents — open in a new tab. */}
               <div className="space-y-2 border-t pt-4">
-                <ExpandableInfo
-                  title="How Flow works & your data"
-                  open={aboutOpen}
-                  onToggle={() => setAboutOpen((o) => !o)}
-                >
-                  <AboutFlowContent />
-                </ExpandableInfo>
-                {/* How does Kongen work — approved language only
-                    (lib/kongen-copy.ts). */}
-                <ExpandableInfo
-                  title={KONGEN_HOW_TITLE}
-                  open={kongenOpen}
-                  onToggle={() => setKongenOpen((o) => !o)}
-                >
-                  <AboutKongenContent />
-                </ExpandableInfo>
-                {/* Public-source link — softened approved claim only (see
-                    the build-provenance TODO in lib/source-link.ts). */}
+                <LegalLink href={TERMS_URL} label={LINK_TERMS_LABEL} />
+                <LegalLink href={PRIVACY_URL} label={LINK_PRIVACY_LABEL} />
+                <LegalLink
+                  href={ACCEPTABLE_USE_URL}
+                  label={LINK_ACCEPTABLE_USE_LABEL}
+                />
+              </div>
+
+              {/* (3) About Kongen — company + free key. */}
+              <div className="space-y-2 border-t pt-4">
+                <h4 className="text-sm font-medium md:text-xs">
+                  {ABOUT_KONGEN_HEADING}
+                </h4>
+                <LegalLink
+                  href={KONGEN_COMPANY_URL}
+                  label={KONGEN_COMPANY_LABEL}
+                />
+                <LegalLink
+                  href={KONGEN_SIGNUP_URL}
+                  label={KONGEN_KEY_CTA_LABEL}
+                />
+              </div>
+
+              {/* (4) Public-source link — softened approved claim only (see
+                  the build-provenance TODO in lib/source-link.ts). */}
+              <div className="border-t pt-4">
                 <p className="text-xs leading-relaxed text-muted-foreground/70">
                   {SOURCE_PUBLIC_PREFIX}{" "}
                   <a
@@ -598,6 +719,31 @@ export function SettingsDrawer({
                   </a>
                 </p>
               </div>
+
+              {/* (5) Verbatim About expandables — consolidated here from
+                  "Your Data" (about-flow.tsx / about-kongen.tsx copy is
+                  claims-audited; reused unchanged). */}
+              <div className="space-y-2 border-t pt-4">
+                <ExpandableInfo
+                  title="How Flow works & your data"
+                  open={aboutOpen}
+                  onToggle={() => setAboutOpen((o) => !o)}
+                >
+                  <AboutFlowContent />
+                </ExpandableInfo>
+                <ExpandableInfo
+                  title={KONGEN_HOW_TITLE}
+                  open={kongenOpen}
+                  onToggle={() => setKongenOpen((o) => !o)}
+                >
+                  <AboutKongenContent />
+                </ExpandableInfo>
+              </div>
+
+              {/* (6) Quiet version footer. */}
+              <p className="border-t pt-4 text-center text-[11px] text-muted-foreground/50">
+                {APP_VERSION_LINE}
+              </p>
             </SubView>
           )}
         </div>

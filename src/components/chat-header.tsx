@@ -58,7 +58,7 @@ export function ChatHeader({
   }
 
   return (
-    <div className="flex items-center gap-2 border-b px-3 py-1 pt-[max(0.25rem,env(safe-area-inset-top))]">
+    <div className="flex items-center gap-2 border-b bg-background px-3 py-1 pt-[max(0.25rem,env(safe-area-inset-top))]">
       <button
         type="button"
         onClick={onOpenSidebar}

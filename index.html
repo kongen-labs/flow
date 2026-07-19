@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f4efe8" />
+    <!-- theme-color drives the iOS installed-PWA status-bar strip so it blends
+         with the app bar instead of showing browser-chrome gray. Two media
+         variants are read at launch (paper light / dark paper — the same
+         values as globals.css --background). lib/theme.ts re-writes BOTH at
+         runtime to the resolved user preference (so an explicit light-in-dark
+         override still wins). -->
+    <meta name="theme-color" content="#f4efe8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a140f" media="(prefers-color-scheme: dark)" />
     <meta
       name="description"
       content="GPTs come and go. You stay in control — your conversations stay on your device, and each prompt is routed to the model best suited to it."

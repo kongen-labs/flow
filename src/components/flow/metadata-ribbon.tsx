@@ -123,13 +123,17 @@ export function MetadataRibbon({
           />
         </div>
       )}
-      <div className="relative flex items-center gap-1.5 text-xs text-muted-foreground">
+      {/* flex-wrap + min-w-0 keep this metadata/icon row inside the card at
+          phone widths (Jul 18 2026: icons were spilling past the bottom
+          edge); the icon group falls to its own right-aligned line via ml-auto
+          rather than overflowing. */}
+      <div className="relative flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
         <Bot className="h-3 w-3 shrink-0" />
         <button
           ref={modelBtnRef}
           onClick={toggleTooltip}
           title="Why this model? Click for details"
-          className="hover:text-foreground transition-colors underline decoration-dotted underline-offset-2"
+          className="min-w-0 max-w-full truncate hover:text-foreground transition-colors underline decoration-dotted underline-offset-2"
         >
           {formatModelName(model)}
         </button>
@@ -209,9 +213,10 @@ export function MetadataRibbon({
           </>
         )}
 
-        {/* Right-aligned icon group: relevance · info · copy */}
-        <span className="flex-1" />
-        <div className="flex items-center gap-0.5">
+        {/* Right-aligned icon group: relevance · info · copy. ml-auto keeps it
+            right-aligned on the same line when it fits, and wraps cleanly to a
+            new right-aligned line when it doesn't (no bottom-edge spill). */}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-0.5">
           {/* Relevance indicator — default state gets a muted, always-visible
               affordance (Jul 16: "make the default icon visible on the
               chat") so every message can reach the signal popover, including
