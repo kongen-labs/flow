@@ -28,7 +28,8 @@ interface MetadataRibbonProps {
   complexity?: number;
   constraint?: number;
   balance?: number;
-  confidenceAdj?: number;
+  /** Genuine [0,1] certainty (LogicScoreResponse.confidence) — shown as "Confidence". */
+  confidence?: number;
   budget?: number;
   ktUsed?: number;
   messageId?: string;
@@ -61,7 +62,7 @@ export function MetadataRibbon({
   complexity,
   constraint,
   balance,
-  confidenceAdj,
+  confidence,
   budget,
   ktUsed,
   messageId,
@@ -314,7 +315,7 @@ export function MetadataRibbon({
             model={model}
             provider={provider}
             balance={balance}
-            confidenceAdj={confidenceAdj}
+            confidence={confidence}
             budget={budget}
             anchorRef={modelBtnRef}
             onClose={() => setShowTooltip(false)}
@@ -393,7 +394,7 @@ export function MetadataRibbon({
           {balance != null && (
             <div className="flex justify-between text-muted-foreground">
               <span>Balance: <strong className="text-foreground">{balance.toFixed(2)}</strong></span>
-              <span>Confidence: <strong className={cn("text-foreground", confidenceAdj != null && confidenceAdj > 0 ? "text-emerald-600 dark:text-emerald-400" : confidenceAdj != null && confidenceAdj < 0 ? "text-red-500" : "")}>{confidenceAdj != null ? (confidenceAdj > 0 ? "+" : "") + confidenceAdj.toFixed(2) : "—"}</strong></span>
+              <span>Confidence: <strong className={cn("text-foreground", confidence != null && confidence >= 0.7 ? "text-emerald-600 dark:text-emerald-400" : confidence != null && confidence < 0.4 ? "text-muted-foreground" : "")}>{confidence != null ? `${Math.round(confidence * 100)}%` : "—"}</strong></span>
             </div>
           )}
 

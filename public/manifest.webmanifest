@@ -2,7 +2,7 @@
   "name": "Flow — local-first chat",
   "short_name": "Flow",
   "id": "flow-local",
-  "description": "GPTs come and go — your conversations stay with you. Local-first, BYO-keys — no password, no profile.",
+  "description": "GPTs come and go. You stay in control — your conversations stay on your device, and each prompt is routed to the model best suited to it. BYO keys, no password, no profile.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

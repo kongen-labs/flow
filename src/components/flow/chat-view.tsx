@@ -113,12 +113,12 @@ export function ChatView({
             <div className="flex h-full min-h-[40vh] items-center justify-center">
               <div className="max-w-lg text-center space-y-6 px-4">
                 <div className="space-y-3">
-                  <h2 className="text-lg font-semibold">GPTs come and go — your conversations stay with you</h2>
+                  <h2 className="text-lg font-semibold">GPTs come and go. You stay in control.</h2>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Everything lives on this device: your keys, your history,
                     your exports. No password, no profile, no lock-in. Flow reads
-                    each prompt&apos;s complexity and routes to the best available
-                    model across Anthropic, OpenAI, Google, Mistral, and
+                    each prompt&apos;s complexity and routes to the model best
+                    suited to it across Anthropic, OpenAI, Google, Mistral, and
                     DeepSeek — with your own keys. When something better ships,
                     Flow just starts using it. No migration, no starting over.
                   </p>

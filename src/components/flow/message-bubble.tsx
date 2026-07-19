@@ -24,6 +24,9 @@ export interface MessageMetadata {
   complexity?: number;
   constraint?: number;
   balance?: number;
+  /** Genuine [0,1] certainty (LogicScoreResponse.confidence) — shown as "Confidence". */
+  confidence?: number;
+  /** Legacy signed adjustment; retained but not displayed. */
   confidence_adj?: number;
   budget?: number;
   kt_used?: number;
@@ -253,7 +256,7 @@ export function MessageBubble({
             complexity={metadata.complexity}
             constraint={metadata.constraint}
             balance={metadata.balance}
-            confidenceAdj={metadata.confidence_adj}
+            confidence={metadata.confidence}
             budget={metadata.budget}
             ktUsed={metadata.kt_used}
             messageId={id}

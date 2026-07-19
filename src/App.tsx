@@ -57,6 +57,7 @@ function toChatMessage(m: StoredMessage): ChatMessage {
           cost: m.metadata.cost_usd,
           savings_pct: m.metadata.savings_pct,
           budget: m.metadata.budget,
+          confidence: m.metadata.confidence,
           confidence_adj: m.metadata.confidence_adj,
           context_scope: m.metadata.context_scope,
         }

@@ -2,9 +2,8 @@
   "name": "flow-local",
   "version": "0.1.0",
   "private": true,
-  "license": "Apache-2.0",
   "type": "module",
-  "description": "Flow unplugged — local-first, BYO-keys chat — no password, no profile. Your conversations stay with you.",
+  "description": "GPTs come and go. You stay in control — your conversations stay on your device, and each prompt is routed to the model best suited to it. BYO keys, no password, no profile.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

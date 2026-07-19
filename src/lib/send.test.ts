@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { LocalStorageKeyStore, type StringStorage } from "./keys";
 import type { LogicScore } from "./kongen";
 import { KongenApiError } from "./kongen";
 import { buildTurns, routePrompt } from "./send";
 import type { StoredMessage } from "./db";
+import { type Catalog, resetCatalogForTests } from "./models";
 
 function memoryStorage(): StringStorage {
   const map = new Map<string, string>();
@@ -44,6 +45,12 @@ describe("routePrompt", () => {
     expect(decision.provider).toBe("anthropic");
     expect(decision.model).toBe("claude-sonnet-4-6");
     expect(decision.budget).toBe(900);
+    // Regression: the popover must read the GENUINE [0,1] certainty
+    // (LogicScoreResponse.confidence), NOT confidence_adj — the latter reads
+    // ~0.00 for most prompts and caused the "Confidence: 0.00" popover bug.
+    expect(decision.confidence).toBe(0.8);
+    expect(decision.confidence).not.toBe(decision.confidenceAdj);
+    expect(decision.confidenceAdj).toBe(0.1);
   });
 
   it("widens the regime when the user's providers don't cover it", async () => {
@@ -107,6 +114,65 @@ describe("routePrompt", () => {
     await expect(
       routePrompt({ text: "hi", mode: "Auto", keys }),
     ).rejects.toThrow(/No provider keys configured/);
+  });
+
+  // -------------------------------------------------------------------------
+  // exhaustive → flagship, never a lower tier (routing bug fix, Jul 18 2026)
+  // -------------------------------------------------------------------------
+  describe("exhaustive routes to a flagship, never a lower tier", () => {
+    afterEach(() => {
+      // Restore the default (seed) catalog for the rest of the suite.
+      resetCatalogForTests();
+    });
+
+    it("routes exhaustive to Opus (the intended flagship) on the normal catalog", async () => {
+      const keys = keysWith({ anthropic: "sk-ant-x", kongen: "kk-x" });
+      const decision = await routePrompt({
+        text: "Design a distributed lock",
+        mode: "Auto",
+        keys,
+        scoreImpl: async () => score("exhaustive"),
+      });
+      expect(decision.regime).toBe("exhaustive");
+      expect(decision.provider).toBe("anthropic");
+      // Opus covers exhaustive and is cheaper than Fable → the auto-target.
+      expect(decision.model).toBe("claude-opus-4-6");
+    });
+
+    it("falls back to a FLAGSHIP (not Sonnet) when the catalog lacks any exhaustive model", async () => {
+      // Reproduces the reported bug: a stale/partial catalog where Anthropic
+      // has NO exhaustive-capable model. The old symmetric widening dropped
+      // exhaustive → "deep" → Sonnet. The fix must land on the flagship.
+      const staleCatalog: Catalog = {
+        version: "test-stale",
+        fetchedAt: Date.now(),
+        providers: [
+          {
+            id: "anthropic",
+            label: "Anthropic",
+            models: [
+              { name: "claude-haiku-4-5-20251001", label: "Haiku", tier: "fast", regimes: ["trivial", "fast"], inputCost: 1, outputCost: 5, selectable: true },
+              { name: "claude-sonnet-4-6", label: "Sonnet", tier: "balanced", regimes: ["moderate", "deep"], inputCost: 3, outputCost: 15, selectable: true },
+              // Flagship present but does NOT cover exhaustive → widening must
+              // still choose it over dropping a tier to Sonnet.
+              { name: "claude-fable-5", label: "Fable 5", tier: "flagship", regimes: ["deep"], inputCost: 10, outputCost: 50, selectable: true },
+            ],
+          },
+        ],
+      };
+      resetCatalogForTests(staleCatalog);
+
+      const keys = keysWith({ anthropic: "sk-ant-x", kongen: "kk-x" });
+      const decision = await routePrompt({
+        text: "Design a distributed lock",
+        mode: "Auto",
+        keys,
+        scoreImpl: async () => score("exhaustive"),
+      });
+      expect(decision.regime).toBe("exhaustive");
+      expect(decision.model).toBe("claude-fable-5"); // flagship, NOT Sonnet
+      expect(decision.model).not.toBe("claude-sonnet-4-6");
+    });
   });
 });
 

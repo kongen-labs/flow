@@ -324,7 +324,7 @@ export function StreamSidebar({
         {/* Footer: branded lifetime savings counter (the retention artifact)
             + ROI line + wedge. "Kongen Routing" is the product surface;
             "Kongen Logic" (the scoring API brand) lives in the explainer
-            body. The login-negation claim is RETIRED (email-verified Kongen key
+            body. "No login" is a RETIRED claim (email-verified Kongen key
             required) — approved phrasing is "No password, no profile." */}
         <div className="border-t border-sidebar-border px-4 py-3 space-y-1">
           {lifetimeSavedUsd > 0 && (

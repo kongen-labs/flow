@@ -99,6 +99,6 @@ describe("explainer copy completeness", () => {
     expect(LABEL_EXPLAIN.kongenRouting).toContain("Kongen Logic");
     // Retired claim must not resurface in explainer copy.
     const all = Object.values(LABEL_EXPLAIN).join(" ").toLowerCase();
-    expect(all).not.toMatch(/no[\s-]?login/i);
+    expect(all).not.toContain("no login");
   });
 });

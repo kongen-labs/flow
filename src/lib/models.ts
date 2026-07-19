@@ -480,6 +480,37 @@ export function flagshipFor(availableProviders: Provider[]): PickedModel | null 
 }
 
 /**
+ * The LOWEST-cost flagship (top-tier) model across the user's providers.
+ *
+ * This is the Auto-routing fallback for a TOP-regime request (exhaustive) that
+ * no available model covers directly: routing must land on a flagship and MUST
+ * NOT silently drop to a lower tier (the exhaustive→Sonnet bug). Cheapest —
+ * not priciest — flagship honours the cost-saver default (e.g. Anthropic →
+ * Opus $30, never Sonnet, and never the pricier Fable $60 unless Opus is
+ * absent from the catalog). Null if the user has no flagship-tier model.
+ *
+ * NOTE: distinct from flagshipFor(), which returns the PRICIEST frontier model
+ * for the savings BASELINE. That divergence is intentional: the savings chip
+ * compares against the most-expensive model you could have used; routing picks
+ * the cheapest capable one.
+ */
+export function cheapestFlagship(
+  availableProviders: Provider[],
+): PickedModel | null {
+  let best: PickedModel | null = null;
+  for (const provider of PROVIDERS) {
+    if (!availableProviders.includes(provider)) continue;
+    for (const spec of modelsForProvider(provider)) {
+      if (spec.tier !== "flagship") continue;
+      if (!best || effectiveCost(spec) < effectiveCost(best.spec)) {
+        best = { provider, model: spec.name, spec };
+      }
+    }
+  }
+  return best;
+}
+
+/**
  * Estimate cost and savings pct vs the latest-frontier baseline
  * (flagshipFor). DELIBERATE DIVERGENCE from routing.py estimate_savings
  * (which used the most expensive routable model) per the Jul 16 2026

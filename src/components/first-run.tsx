@@ -169,9 +169,9 @@ export function FirstRun({
               <h1 className="text-3xl font-semibold md:text-2xl">Flow</h1>
               {/* Shipped hero copy, verbatim (retired-claims clean). */}
               <p className="mx-auto max-w-xs text-[15px] leading-relaxed text-muted-foreground md:text-sm">
-                GPTs come and go — your conversations stay with you.
-                Local-first — no password, no profile. Bring your own keys;
-                they never leave this device.
+                GPTs come and go. You stay in control — your conversations stay
+                on your device, and each prompt is routed to the model best
+                suited to it. Bring your own keys; they never leave this device.
               </p>
             </div>
 

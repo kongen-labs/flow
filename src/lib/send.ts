@@ -24,6 +24,7 @@ import { FlowDB, type StoredMessage, type StoredMessageMetadata } from "./db";
 import { availableProviders, type KeyStore } from "./keys";
 import { KongenApiError, scorePrompt } from "./kongen";
 import {
+  cheapestFlagship,
   defaultModel,
   estimateSavings,
   findModelProvider,
@@ -50,6 +51,14 @@ export interface RoutingDecision {
   routedVia: RoutedVia;
   regime?: Regime;
   budget?: number;
+  /**
+   * Genuine [0,1] certainty: how decisively the prompt maps to its detected
+   * regime (LogicScoreResponse.confidence). This is what the "Why this model?"
+   * popover shows as "Confidence" — NOT confidence_adj, which is a legacy
+   * signed nudge that reads ~0.00 for most prompts (the "Confidence: 0.00" bug).
+   */
+  confidence?: number;
+  /** Legacy signed adjustment [-1,1]; retained for data completeness, not shown. */
   confidenceAdj?: number;
   ktRemaining?: number;
   /** Present when Kongen routing was attempted but fell back. */
@@ -123,6 +132,7 @@ export async function routePrompt(opts: {
       routedVia: "kongen",
       regime: score.regime,
       budget: score.recommended_tokens,
+      confidence: score.confidence,
       confidenceAdj: score.confidence_adj,
       ktRemaining: score.tokens_remaining,
     };
@@ -142,10 +152,27 @@ export async function routePrompt(opts: {
 }
 
 /**
- * pickModel for a regime, widening to neighbouring regimes when the user's
- * providers don't cover the detected one (e.g. only an Anthropic key and a
- * "trivial" regime is fine — Haiku covers it — but a single-model provider
- * set may miss a regime entirely).
+ * pickModel for a regime, widening when the user's providers don't cover the
+ * detected one. Widening is DIRECTIONAL by design:
+ *
+ *   1. Direct hit — the cheapest model covering the detected regime. For
+ *      "exhaustive" with an Anthropic key this is Opus (the intended flagship
+ *      auto-target); Fable stays pinnable-only via its higher price.
+ *   2. Step UP — try MORE capable regimes. Never downgrade the user's
+ *      requested reasoning depth while a stronger model is still available.
+ *   3. Flagship floor — if nothing at OR above the requested regime is
+ *      covered, fall back to the provider's flagship (cheapest top-tier)
+ *      model. This is the FIX for the exhaustive→Sonnet bug: a top-regime
+ *      request that no model covers directly must resolve to a flagship, NEVER
+ *      silently drop a tier to a cheaper lower-tier model like Sonnet.
+ *   4. Step DOWN — only as a last resort (no flagship at all in the user's
+ *      catalog) do we accept a lower regime, so the user still gets a reply
+ *      rather than an error.
+ *
+ * Prior behaviour widened symmetrically outward, so "exhaustive" (the top
+ * regime) had nowhere up to go and fell straight to "deep" → Sonnet whenever
+ * the available catalog lacked an exhaustive-capable model (e.g. a stale or
+ * partial cached catalog). That silent tier-drop is the bug this replaces.
  */
 function pickModelWithFallback(
   regime: Regime,
@@ -153,17 +180,34 @@ function pickModelWithFallback(
 ): PickedModel {
   const ladder: Regime[] = ["trivial", "fast", "moderate", "deep", "exhaustive"];
   const start = ladder.indexOf(regime);
-  // Try the detected regime, then step outward (prefer stepping up).
-  const order: Regime[] = [regime];
-  for (let d = 1; d < ladder.length; d++) {
-    if (start + d < ladder.length) order.push(ladder[start + d]);
-    if (start - d >= 0) order.push(ladder[start - d]);
+
+  // 1. Direct hit.
+  try {
+    return pickModel(regime, providers);
+  } catch {
+    // not directly covered — widen
   }
-  for (const r of order) {
+
+  // 2. Step UP (toward more capable regimes) before ever stepping down.
+  for (let i = start + 1; i < ladder.length; i++) {
     try {
-      return pickModel(r, providers);
+      return pickModel(ladder[i], providers);
     } catch {
-      // keep widening
+      // keep widening upward
+    }
+  }
+
+  // 3. Flagship floor — never drop below the requested tier for a top-regime
+  //    request. Guarantees exhaustive → a flagship (e.g. Opus), never Sonnet.
+  const flagship = cheapestFlagship(providers);
+  if (flagship) return flagship;
+
+  // 4. Last resort: step down so chat still works when no flagship exists.
+  for (let i = start - 1; i >= 0; i--) {
+    try {
+      return pickModel(ladder[i], providers);
+    } catch {
+      // keep widening downward
     }
   }
   throw new Error("No model available for any regime with current keys");
@@ -265,6 +309,7 @@ export async function sendMessageWith(
             cost_usd: costUsd,
             savings_pct: decision.routedVia === "kongen" ? savingsPct : undefined,
             budget: decision.budget,
+            confidence: decision.confidence,
             confidence_adj: decision.confidenceAdj,
             routed_via: decision.routedVia,
             // Record the scope actually used so the chain view can show

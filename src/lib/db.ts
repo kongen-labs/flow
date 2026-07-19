@@ -30,6 +30,9 @@ export interface StoredMessageMetadata {
   cost_usd?: number;
   savings_pct?: number;
   budget?: number;
+  /** Genuine [0,1] certainty (LogicScoreResponse.confidence) — shown as "Confidence". */
+  confidence?: number;
+  /** Legacy signed adjustment; retained but not displayed. */
   confidence_adj?: number;
   balance?: number;
   routed_via?: "kongen" | "pinned" | "default";

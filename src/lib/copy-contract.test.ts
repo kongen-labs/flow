@@ -1,12 +1,13 @@
 /**
- * Copy contract — retired-claims scan over the RAW published artifacts.
- * The scan covers the OS/store/repo copy surfaces at the file level so a
- * retired claim cannot slip into a surface the in-app copy tests miss.
+ * Copy contract — retired-claims scan over the RAW published artifacts
+ * (legal review audit, Jul 16 2026: the "no login" claim escaped into
+ * public/manifest.webmanifest because the previous scan only covered
+ * explain-copy.ts; this closes the escape class at the file level).
  *
  * Retired / banned classes:
- *  - login-negation claims ("no account" / "no signup" and the like) —
- *    RETIRED since the mandatory-Kongen-key funnel (approved form: "no
- *    password, no profile").
+ *  - "no login" / "no account" / "no signup" — RETIRED since the
+ *    mandatory-Kongen-key funnel (approved form: "no password, no
+ *    profile").
  *  - "cheapest" positioning — banned framing (savings are an outcome;
  *    selection is "best suited").
  *  - Savings percentages — no % claims without measured data.
@@ -36,7 +37,7 @@ const PKG_DESCRIPTION: string =
   (JSON.parse(packageJsonRaw) as { description?: string }).description ?? "";
 
 const RETIRED_CLAIMS: { name: string; pattern: RegExp }[] = [
-  { name: "login-negation claim", pattern: /no[\s-]?login/i },
+  { name: '"no login"', pattern: /no[\s-]?login/i },
   { name: '"no account"', pattern: /no[\s-]?account/i },
   { name: '"no signup"', pattern: /no[\s-]?sign[\s-]?up/i },
   { name: '"cheapest" positioning', pattern: /cheapest/i },
@@ -69,7 +70,7 @@ describe("retired-claims scan (raw published artifacts)", () => {
   it("manifest carries the approved description", () => {
     const manifest = JSON.parse(RAW_SURFACES["public/manifest.webmanifest"]);
     expect(manifest.description).toBe(
-      "GPTs come and go — your conversations stay with you. Local-first, BYO-keys — no password, no profile.",
+      "GPTs come and go. You stay in control — your conversations stay on your device, and each prompt is routed to the model best suited to it. BYO keys, no password, no profile.",
     );
   });
 });

@@ -20,7 +20,13 @@ interface ModelTooltipProps {
   model: string;
   provider?: string;
   balance?: number;
-  confidenceAdj?: number;
+  /**
+   * Genuine [0,1] certainty (LogicScoreResponse.confidence) — how decisively
+   * the prompt maps to its detected regime. Shown as "Confidence". This
+   * replaced confidence_adj, a legacy signed nudge that read ~0.00 for most
+   * prompts and produced the "Confidence: 0.00" bug.
+   */
+  confidence?: number;
   budget?: number;
   /** The ribbon's model-name button — the popover hugs this anchor. */
   anchorRef: RefObject<HTMLElement | null>;
@@ -32,7 +38,7 @@ export function ModelTooltip({
   model,
   provider,
   balance,
-  confidenceAdj,
+  confidence,
   budget,
   anchorRef,
   onClose,
@@ -113,21 +119,20 @@ export function ModelTooltip({
               <span className="font-medium">{balance.toFixed(2)}</span>
             </>
           )}
-          {confidenceAdj != null && (
+          {confidence != null && (
             <>
               <span className="text-muted-foreground">Confidence</span>
               <span
                 className={cn(
                   "font-medium",
-                  confidenceAdj > 0
+                  confidence >= 0.7
                     ? "text-emerald-600 dark:text-emerald-400"
-                    : confidenceAdj < 0
-                      ? "text-brand-fg"
+                    : confidence < 0.4
+                      ? "text-muted-foreground"
                       : ""
                 )}
               >
-                {confidenceAdj > 0 ? "+" : ""}
-                {confidenceAdj.toFixed(2)}
+                {Math.round(confidence * 100)}%
               </span>
             </>
           )}
