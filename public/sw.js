@@ -13,10 +13,15 @@
  *  - Other same-origin statics (icons, manifest): cache-first with network
  *    fill.
  *
- * Bump VERSION to invalidate all runtime caches on deploy of a new shell.
+ * VERSION is stamped at build time: the `__FLOW_BUILD__` placeholder is
+ * rewritten in dist/sw.js by the `flow-sw-version` Vite plugin (see
+ * vite.config.ts) with the same build id baked into the app bundle as
+ * `__APP_BUILD__`. A new deploy → new VERSION → the `activate` handler below
+ * purges every prior runtime cache. (In `vite dev` the SW is never registered
+ * — main.tsx guards on import.meta.env.PROD — so the raw placeholder is inert.)
  */
 
-const VERSION = "flow-shell-v1";
+const VERSION = "flow-shell-__FLOW_BUILD__";
 const SHELL_URLS = ["./", "./manifest.webmanifest", "./icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
